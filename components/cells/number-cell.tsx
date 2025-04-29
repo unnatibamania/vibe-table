@@ -84,8 +84,8 @@ export function NumberCell({ initialValue, onSave }: NumberCellProps) {
       onDoubleClick={handleDoubleClick}
       className="cursor-pointer truncate" // Removed px-2 py-1, w-full
     >
-      {/* Display formatted number or nbsp if null/undefined */}
-      {initialValue != null ? initialValue.toLocaleString() : "\u00A0"}
+      {/* Display formatted number or "-" if null/undefined */}
+      {initialValue != null ? initialValue.toLocaleString() : "-"}
     </div>
   );
 }

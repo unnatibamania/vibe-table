@@ -11,9 +11,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog"; // Import Dialog components
 import { EditColumnForm } from "@/components/edit-column-form"; // Import the new form
-
+import { cn } from "@/lib/utils";
 // Define the structure of our sample data
 interface SampleRow {
   id: number; // Keep id as non-nullable number
@@ -134,6 +135,45 @@ const initialRows: SampleRow[] = [
     isFeatured: true,
     agreedToTerms: true,
     satisfaction: 4,
+  },
+  {
+    id: 8,
+    firstName: "Ethan",
+    lastName: "Garcia",
+    age: 29,
+    isActive: false,
+    birthDate: new Date(1995, 3, 12),
+    department: "Marketing",
+    skills: ["SQL", "HTML", "Node.js"],
+    isFeatured: false,
+    agreedToTerms: true,
+    satisfaction: 3,
+  },
+  {
+    id: 9,
+    firstName: "Olivia",
+    lastName: "Rodriguez",
+    age: 38,
+    isActive: true,
+    birthDate: new Date(1986, 7, 25),
+    department: "Engineering",
+    skills: ["React", "TypeScript", "Docker"],
+    isFeatured: true,
+    agreedToTerms: false,
+    satisfaction: 5,
+  },
+  {
+    id: 10,
+    firstName: "Noah",
+    lastName: "Martinez",
+    age: null,
+    isActive: false,
+    birthDate: null,
+    department: "Sales",
+    skills: null,
+    isFeatured: false,
+    agreedToTerms: false,
+    satisfaction: null,
   },
 ];
 
@@ -544,44 +584,70 @@ export default function Home() {
   // --- End Handler for Saving New Columns ---
 
   return (
-    <div className="container mx-auto p-8">
-      <h1 className="text-2xl font-bold mb-4">Editable Data Grid Demo</h1>
-      <div className="mb-2 text-sm text-muted-foreground">
-        {selected.size} row(s) selected.
-      </div>
-      {/* --- Add Row/Column Buttons --- */}
-      <div className="flex space-x-2 mb-4">
-        <Button onClick={handleAddRow}>Add Row</Button>
-
-        {/* Add Column Dialog Trigger and Content */}
-        <Dialog open={isAddingColumn} onOpenChange={setIsAddingColumn}>
-          <DialogTrigger asChild>
-            <Button variant="outline">Add Column</Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Add New Column</DialogTitle>
-            </DialogHeader>
-            <EditColumnForm<SampleRow>
-              onSave={handleSaveNewColumn}
-              onCancel={() => setIsAddingColumn(false)}
-              // No 'column' prop passed - defaults to Add mode
-            />
-          </DialogContent>
-        </Dialog>
-      </div>
-      {/* --- End Buttons --- */}
-
-      <DataGrid<SampleRow>
-        rows={rows}
-        columns={columns}
-        onRowChange={handleRowChange}
-        enableRowSelection={true}
-        onSelectionChange={handleSelectionChange}
-        onColumnChange={handleColumnChange}
-        onColumnDelete={handleDeleteColumn} // Pass the delete handler
-        classNames={{}}
+    <div className="z-20 relative w-screen  h-screen ">
+      <div
+        className={cn(
+          "absolute inset-0",
+          "[background-size:20px_20px]",
+          "[background-image:radial-gradient(#d4d4d4_1px,transparent_1px)]",
+          "dark:[background-image:radial-gradient(#404040_1px,transparent_1px)]"
+        )}
       />
+      {/* Radial gradient for the container to give a faded look */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)] dark:bg-black"></div>
+
+      <section className="z-20 mt-40 relative px-8">
+        <div className="flex justify-center flex-col items-center">
+          <h1 className="text-4xl font-bold mb-4">
+            Tabloo: A data grid for the web
+          </h1>
+          <p className="mb-2 text-lg text-muted-foreground">
+            Coming soon to npm registry.
+          </p>
+        </div>
+
+        {/* --- Add Row/Column Buttons --- */}
+        <div className="flex space-x-2 w-full justify-end mb-4">
+          {/* Add Column Dialog Trigger and Content */}
+          <Dialog open={isAddingColumn} onOpenChange={setIsAddingColumn}>
+            <DialogTrigger asChild>
+              <Button variant="outline">Add Column</Button>
+            </DialogTrigger>
+            <DialogContent className="w-full">
+              <DialogHeader>
+                <DialogTitle>Add New Column</DialogTitle>
+                <DialogDescription>
+                  Add a new column to the grid.
+                </DialogDescription>
+              </DialogHeader>
+              <EditColumnForm<SampleRow>
+                onSave={handleSaveNewColumn}
+                onCancel={() => setIsAddingColumn(false)}
+                // No 'column' prop passed - defaults to Add mode
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
+        {/* --- End Buttons --- */}
+
+        <DataGrid<SampleRow>
+          rows={rows}
+          columns={columns}
+          onRowChange={handleRowChange}
+          enableRowSelection={true}
+          onSelectionChange={handleSelectionChange}
+          onColumnChange={handleColumnChange}
+          onColumnDelete={handleDeleteColumn} // Pass the delete handler
+          classNames={{}}
+        />
+
+        <div className="flex items-center gap-3 justify-start mt-4">
+          <Button onClick={handleAddRow}>Add Row</Button>
+          <p className="text-sm  text-muted-foreground">
+            {selected.size} row(s) selected.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

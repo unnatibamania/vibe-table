@@ -142,27 +142,27 @@ export function EditColumnForm<T extends { [key: string]: CellValue }>({
   );
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 space-y-4 w-64">
+    <form onSubmit={handleSubmit} className="p-4 space-y-4">
       {/* Column Header (Name) Input */}
-      <div>
+      <div className="flex flex-col gap-2">
         <Label htmlFor={`${initialConfig.id}-header`}>Header Text</Label>
         <Input
           id={`${initialConfig.id}-header`}
           value={headerText}
           onChange={(e) => setHeaderText(e.target.value)}
-          placeholder="Column Name"
+          placeholder="Address"
           required // Make header required
         />
       </div>
 
       {/* Column Type Select */}
-      <div>
+      <div className="flex flex-col gap-2">
         <Label htmlFor={`${initialConfig.id}-type`}>Column Type</Label>
         <Select
           value={selectedType}
           onValueChange={(value) => setSelectedType(value as ColumnType)}
         >
-          <SelectTrigger id={`${initialConfig.id}-type`}>
+          <SelectTrigger className="w-full" id={`${initialConfig.id}-type`}>
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
           <SelectContent>
@@ -208,7 +208,7 @@ export function EditColumnForm<T extends { [key: string]: CellValue }>({
           </Button>
         )}
         <Button type="submit" size="sm">
-          Save Changes
+          New Column
         </Button>
       </div>
     </form>

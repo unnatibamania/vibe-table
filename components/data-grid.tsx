@@ -451,7 +451,7 @@ function DraggableTableHeader<T>({
             <div
               onMouseDown={handleMouseDown}
               className={cn(
-                `absolute top-0 bottom-0 -right-1 w-2 cursor-col-resize group-hover:bg-blue-500/50 select-none touch-none z-10`,
+                `absolute top-0 bottom-0 -right-1 w-0.5 cursor-col-resize group-hover:bg-zinc-500 select-none touch-none z-10`,
                 classNames?.resizeHandle
               )}
               aria-label="Resize column"

@@ -58,7 +58,7 @@ export function TextCell({ initialValue, onSave }: TextCellProps) {
 
   return (
     <div onDoubleClick={handleDoubleClick} className="cursor-pointer truncate">
-      {value === "" ? "\u00A0" : value}
+      {value === "" ? "-" : value}
     </div>
   );
 }

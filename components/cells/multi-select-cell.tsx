@@ -24,14 +24,14 @@ import {
 // Define a list of color classes (Tailwind examples)
 // Using bg, border, and text colors with opacity where possible
 const badgeColorClasses = [
-  "border border-sky-400/80 bg-sky-100/80 text-sky-700",
-  "border border-amber-400/80 bg-amber-100/80 text-amber-700",
-  "border border-violet-400/80 bg-violet-100/80 text-violet-700",
-  "border border-emerald-400/80 bg-emerald-100/80 text-emerald-700",
-  "border border-rose-400/80 bg-rose-100/80 text-rose-700",
-  "border border-blue-400/80 bg-blue-100/80 text-blue-700",
-  "border border-yellow-400/80 bg-yellow-100/80 text-yellow-700",
-  "border border-indigo-400/80 bg-indigo-100/80 text-indigo-700",
+  "border  bg-sky-100/80 text-sky-700",
+  "border  bg-amber-100/80 text-amber-700",
+  "border  bg-violet-100/80 text-violet-700",
+  "border  bg-emerald-100/80 text-emerald-700",
+  "border  bg-rose-100/80 text-rose-700",
+  "border  bg-blue-100/80 text-blue-700",
+  "border  bg-yellow-100/80 text-yellow-700",
+  "border  bg-indigo-100/80 text-indigo-700",
 ];
 
 // Function to get a consistent color based on the badge value (simple hash)
@@ -143,7 +143,7 @@ export function MultiSelectCell({
                 <Badge
                   key={value}
                   className={cn(
-                    "whitespace-nowrap px-1.5 py-0.5  text-xs font-medium rounded",
+                    "whitespace-nowrap px-1.5 py-0.5 text-xs rounded-full font-medium ",
                     getColorClass(value),
                     classNames?.badge
                   )}
@@ -157,7 +157,7 @@ export function MultiSelectCell({
             {overflowCount > 0 && (
               <Badge
                 variant="outline"
-                className="whitespace-nowrap rounded-full px-1.5 py-0.5 text-xs font-medium rounded"
+                className="whitespace-nowrap rounded-full px-1.5 py-0.5 text-xs font-medium"
               >
                 +{overflowCount}
               </Badge>
