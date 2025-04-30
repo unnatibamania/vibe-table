@@ -68,6 +68,8 @@ interface DataGridProps<
   classNames?: DataGridClassNames; // Use imported type
   onColumnChange?: (updatedColumn: ColumnConfig<T>) => void; // Add prop definition
   onColumnDelete?: (columnId: string) => void; // <-- Add onColumnDelete prop
+  isLoading?: boolean; // <-- Add isLoading prop
+  skeletonComponent?: React.ReactNode; // <-- Add skeletonComponent prop
 }
 
 // The main DataGrid component
@@ -84,7 +86,9 @@ export function DataGrid<
   onSelectionChange,
   classNames,
   onColumnChange,
-  onColumnDelete, // <-- Destructure prop
+  onColumnDelete, // <-- Destructure prop,
+  isLoading,
+  skeletonComponent,
 }: DataGridProps<T>) {
   // --- Sorting State ---
   const [sortColumnId, setSortColumnId] = React.useState<string | null>(null);
@@ -483,6 +487,8 @@ export function DataGrid<
             columnWidths={columnWidths}
             enableRowSelection={enableRowSelection}
             classNames={classNames}
+            isLoading={isLoading}
+            skeletonComponent={skeletonComponent}
           />
         </Table>
       </div>

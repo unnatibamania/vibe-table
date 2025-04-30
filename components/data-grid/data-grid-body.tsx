@@ -29,6 +29,8 @@ interface DataGridBodyProps<
   columnWidths: Record<string, number>;
   enableRowSelection: boolean;
   classNames?: DataGridClassNames;
+  isLoading?: boolean;
+  skeletonComponent?: React.ReactNode;
 }
 
 export function DataGridBody<
@@ -42,156 +44,174 @@ export function DataGridBody<
   columnWidths,
   enableRowSelection,
   classNames,
+  isLoading,
+  skeletonComponent,
 }: DataGridBodyProps<T>) {
   // Row rendering logic will go here
   return (
     <TableBody className={cn(classNames?.body?.wrapper)}>
-      {rows.map((row, rowIndex) => {
-        const isSelected = selectedRowIds.has(row.id);
-        return (
-          // Add visual indication for selected rows
-          <TableRow
-            key={row.id}
-            data-state={isSelected ? "selected" : ""}
-            className={cn(
-              "h-10 py-2",
-              classNames?.body?.row,
-              isSelected && classNames?.body?.selectedRow
-            )}
-          >
-            {/* Selection Cell */}
-            {enableRowSelection && (
-              <TableCell className={cn("p-0", classNames?.body?.cell)}>
-                <div className="flex items-center justify-center h-full">
-                  <Checkbox
-                    checked={isSelected}
-                    onCheckedChange={(checked) =>
-                      handleSelectRow(row.id, checked)
-                    }
-                    aria-label={`Select row ${rowIndex + 1}`}
-                    className={cn(classNames?.components?.checkbox)}
-                  />
-                </div>
-              </TableCell>
-            )}
+      {isLoading
+        ? skeletonComponent
+        : rows.map((row, rowIndex) => {
+            const isSelected = selectedRowIds.has(row.id);
+            return (
+              // Add visual indication for selected rows
+              <TableRow
+                key={row.id}
+                data-state={isSelected ? "selected" : ""}
+                className={cn(
+                  "h-10 py-2",
+                  classNames?.body?.row,
+                  isSelected && classNames?.body?.selectedRow
+                )}
+              >
+                {/* Selection Cell */}
+                {enableRowSelection && (
+                  <TableCell className={cn("p-0", classNames?.body?.cell)}>
+                    <div className="flex items-center justify-center h-full">
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={(checked) =>
+                          handleSelectRow(row.id, checked)
+                        }
+                        aria-label={`Select row ${rowIndex + 1}`}
+                        className={cn(classNames?.components?.checkbox)}
+                      />
+                    </div>
+                  </TableCell>
+                )}
 
-            {columns.map((column) => {
-              const initialValue = row[column.id];
-              const cellStyle: React.CSSProperties = {
-                width: columnWidths[column.id]
-                  ? `${columnWidths[column.id]}px`
-                  : undefined,
-                minWidth: column.minWidth ? `${column.minWidth}px` : undefined,
-                maxWidth: column.maxWidth ? `${column.maxWidth}px` : undefined,
-              };
-              return (
-                <TableCell
-                  key={column.id}
-                  style={cellStyle}
-                  className={cn(
-                    "overflow-hidden whitespace-nowrap bg-zinc-50/50 text-ellipsis align-middle",
-                    classNames?.body?.cell
-                  )}
-                >
-                  {column.type === "text" ? (
-                    <TextCell
-                      initialValue={String(initialValue ?? "")}
-                      onSave={(newValue: string) =>
-                        handleSave(rowIndex, column.id, newValue)
-                      }
-                    />
-                  ) : column.type === "number" ? (
-                    <NumberCell
-                      initialValue={
-                        typeof initialValue === "number" ? initialValue : null
-                      }
-                      onSave={(newValue: number | null) =>
-                        handleSave(rowIndex, column.id, newValue)
-                      }
-                    />
-                  ) : column.type === "boolean" ||
-                    column.type === "checkbox" ? (
-                    <BooleanCell
-                      initialValue={
-                        typeof initialValue === "boolean" ? initialValue : null
-                      }
-                      isEditable={column.isEditable}
-                      onSave={(newValue: boolean) =>
-                        handleSave(rowIndex, column.id, newValue)
-                      }
-                      classNames={classNames?.components}
-                    />
-                  ) : column.type === "date" ? (
-                    <DateCell
-                      initialValue={
-                        initialValue instanceof Date ? initialValue : null
-                      }
-                      isEditable={column.isEditable}
-                      onSave={(newValue: Date | null) =>
-                        handleSave(rowIndex, column.id, newValue)
-                      }
-                      classNames={classNames?.components}
-                    />
-                  ) : column.type === "select" ? (
-                    <SelectCell
-                      initialValue={
-                        typeof initialValue === "string" ? initialValue : null
-                      }
-                      options={column.selectOptions || []}
-                      isEditable={column.isEditable}
-                      onSave={(newValue: string | null) =>
-                        handleSave(rowIndex, column.id, newValue)
-                      }
-                      classNames={classNames?.components}
-                    />
-                  ) : column.type === "multi-select" ? (
-                    <MultiSelectCell
-                      initialValues={
-                        Array.isArray(initialValue)
-                          ? initialValue.filter(
-                              (v): v is string => typeof v === "string"
-                            )
-                          : null
-                      }
-                      options={column.multiSelectOptions || []}
-                      isEditable={column.isEditable}
-                      onSave={(newValue: string[] | null) =>
-                        handleSave(rowIndex, column.id, newValue)
-                      }
-                      classNames={classNames?.components}
-                    />
-                  ) : column.type === "toggle" ? (
-                    <ToggleCell
-                      initialValue={
-                        typeof initialValue === "boolean" ? initialValue : null
-                      }
-                      isEditable={column.isEditable}
-                      onSave={(newValue: boolean) =>
-                        handleSave(rowIndex, column.id, newValue)
-                      }
-                      classNames={classNames?.components}
-                    />
-                  ) : column.type === "rating" ? (
-                    <RatingCell
-                      initialValue={
-                        typeof initialValue === "number" ? initialValue : null
-                      }
-                      isEditable={column.isEditable}
-                      onSave={(newValue: number | null) =>
-                        handleSave(rowIndex, column.id, newValue)
-                      }
-                      classNames={classNames?.components}
-                    />
-                  ) : (
-                    // Default case: Render directly, no extra div/padding needed
-                    column.cell(row)
-                  )}
-                </TableCell>
-              );
-            })}
-          </TableRow>
-        );
-      })}
+                {columns.map((column) => {
+                  const initialValue = row[column.id];
+                  const cellStyle: React.CSSProperties = {
+                    width: columnWidths[column.id]
+                      ? `${columnWidths[column.id]}px`
+                      : undefined,
+                    minWidth: column.minWidth
+                      ? `${column.minWidth}px`
+                      : undefined,
+                    maxWidth: column.maxWidth
+                      ? `${column.maxWidth}px`
+                      : undefined,
+                  };
+                  return (
+                    <TableCell
+                      key={column.id}
+                      style={cellStyle}
+                      className={cn(
+                        "overflow-hidden whitespace-nowrap bg-zinc-50/50 text-ellipsis align-middle",
+                        classNames?.body?.cell
+                      )}
+                    >
+                      {column.type === "text" ? (
+                        <TextCell
+                          initialValue={String(initialValue ?? "")}
+                          onSave={(newValue: string) =>
+                            handleSave(rowIndex, column.id, newValue)
+                          }
+                        />
+                      ) : column.type === "number" ? (
+                        <NumberCell
+                          initialValue={
+                            typeof initialValue === "number"
+                              ? initialValue
+                              : null
+                          }
+                          onSave={(newValue: number | null) =>
+                            handleSave(rowIndex, column.id, newValue)
+                          }
+                        />
+                      ) : column.type === "boolean" ||
+                        column.type === "checkbox" ? (
+                        <BooleanCell
+                          initialValue={
+                            typeof initialValue === "boolean"
+                              ? initialValue
+                              : null
+                          }
+                          isEditable={column.isEditable}
+                          onSave={(newValue: boolean) =>
+                            handleSave(rowIndex, column.id, newValue)
+                          }
+                          classNames={classNames?.components}
+                        />
+                      ) : column.type === "date" ? (
+                        <DateCell
+                          initialValue={
+                            initialValue instanceof Date ? initialValue : null
+                          }
+                          isEditable={column.isEditable}
+                          onSave={(newValue: Date | null) =>
+                            handleSave(rowIndex, column.id, newValue)
+                          }
+                          classNames={classNames?.components}
+                        />
+                      ) : column.type === "select" ? (
+                        <SelectCell
+                          initialValue={
+                            typeof initialValue === "string"
+                              ? initialValue
+                              : null
+                          }
+                          options={column.selectOptions || []}
+                          isEditable={column.isEditable}
+                          onSave={(newValue: string | null) =>
+                            handleSave(rowIndex, column.id, newValue)
+                          }
+                          classNames={classNames?.components}
+                        />
+                      ) : column.type === "multi-select" ? (
+                        <MultiSelectCell
+                          initialValues={
+                            Array.isArray(initialValue)
+                              ? initialValue.filter(
+                                  (v): v is string => typeof v === "string"
+                                )
+                              : null
+                          }
+                          options={column.multiSelectOptions || []}
+                          isEditable={column.isEditable}
+                          onSave={(newValue: string[] | null) =>
+                            handleSave(rowIndex, column.id, newValue)
+                          }
+                          classNames={classNames?.components}
+                        />
+                      ) : column.type === "toggle" ? (
+                        <ToggleCell
+                          initialValue={
+                            typeof initialValue === "boolean"
+                              ? initialValue
+                              : null
+                          }
+                          isEditable={column.isEditable}
+                          onSave={(newValue: boolean) =>
+                            handleSave(rowIndex, column.id, newValue)
+                          }
+                          classNames={classNames?.components}
+                        />
+                      ) : column.type === "rating" ? (
+                        <RatingCell
+                          initialValue={
+                            typeof initialValue === "number"
+                              ? initialValue
+                              : null
+                          }
+                          isEditable={column.isEditable}
+                          onSave={(newValue: number | null) =>
+                            handleSave(rowIndex, column.id, newValue)
+                          }
+                          classNames={classNames?.components}
+                        />
+                      ) : (
+                        // Default case: Render directly, no extra div/padding needed
+                        column.cell(row)
+                      )}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            );
+          })}
     </TableBody>
   );
 }

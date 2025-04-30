@@ -155,16 +155,18 @@ export function DraggableTableHeader<T>({
                 {/* Header Content */}
                 <span className="truncate">{column.header}</span>
                 {/* Sort Icon */}
-                <div className="ml-auto flex-shrink-0 flex flex-col ">
+                <div className="ml-auto  cursor-pointer flex flex-col ">
                   <ChevronUp
+                    size={8}
                     className={cn(
-                      "h-0.5 w-0.5 text-zinc-500",
+                      " text-zinc-500",
                       currentDirection === "asc" && "text-zinc-800"
                     )}
                   />
                   <ChevronDown
+                    size={8}
                     className={cn(
-                      "h-0.5 w-0.5 text-zinc-500",
+                      " text-zinc-500",
                       currentDirection === "desc" && "text-zinc-800"
                     )}
                   />
