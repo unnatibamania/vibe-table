@@ -39,6 +39,8 @@ interface DraggableTableHeaderProps<T> {
   classNames?: DataGridClassNames["header"];
   onColumnChange?: (updatedColumn: ColumnConfig<T>) => void;
   onColumnDelete?: (columnId: string) => void; // <-- Add onColumnDelete prop
+  pinnedColumns: Record<string, boolean>;
+  setPinnedColumns: (pinnedColumns: Record<string, boolean>) => void;
 }
 
 export function DraggableTableHeader<T>({
@@ -52,6 +54,8 @@ export function DraggableTableHeader<T>({
   classNames,
   onColumnChange,
   onColumnDelete, // <-- Destructure prop
+  pinnedColumns,
+  setPinnedColumns,
 }: DraggableTableHeaderProps<T>) {
   const {
     attributes,
@@ -217,6 +221,16 @@ export function DraggableTableHeader<T>({
                       Delete
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuItem
+                    onSelect={() =>
+                      setPinnedColumns({
+                        ...pinnedColumns,
+                        [column.id]: !pinnedColumns[column.id],
+                      })
+                    }
+                  >
+                    {pinnedColumns[column.id] ? "Unpin" : "Pin"}
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}

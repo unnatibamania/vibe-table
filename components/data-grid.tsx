@@ -52,6 +52,7 @@ import { cn } from "@/lib/utils"; // Need cn for merging classes
 import { DraggableTableHeader } from "./data-grid/draggable-table-header"; // <-- Import DraggableTableHeader
 import type { DataGridClassNames, SortDirection } from "./data-grid/types"; // <-- Import types
 import { DataGridBody } from "./data-grid/data-grid-body"; // <-- Import DataGridBody
+import { PinnedTable } from "./pinned-table/pinned-table";
 
 // Define the props for the DataGrid component
 interface DataGridProps<
@@ -315,11 +316,17 @@ export function DataGrid<
   const [columnWidths, setColumnWidths] = React.useState<
     Record<string, number>
   >({});
+
+  const [pinnedColumns, setPinnedColumns] = React.useState<
+    Record<string, boolean>
+  >({});
+
   const [resizingColumn, setResizingColumn] = React.useState<{
     id: string;
     startX: number;
     startWidth: number;
   } | null>(null);
+
   const tableRef = React.useRef<HTMLTableElement>(null);
 
   // --- Resize Handlers ---
@@ -412,8 +419,18 @@ export function DataGrid<
       measuring={{ droppable: { strategy: MeasuringStrategy.Always } }} // Helps with table layout measurement
     >
       <div
-        className={cn("rounded-md border overflow-x-auto", classNames?.root)}
+        className={cn(
+          "rounded-md relative border z-20 overflow-x-auto",
+          classNames?.root
+        )}
       >
+        {Object.keys(pinnedColumns).length > 0 && (
+          <PinnedTable
+            pinnedColumns={columns.filter((col) => pinnedColumns[col.id])}
+            rows={rows}
+            classNames={classNames}
+          />
+        )}
         <Table
           ref={tableRef}
           className={cn("w-full border-collapse", classNames?.table)}
@@ -447,30 +464,34 @@ export function DataGrid<
                 )}
 
                 {/* Draggable & Resizable Column Headers */}
-                {columns.map((column) => {
-                  const isSortable = !!column.isSortable;
-                  const isCurrentSortColumn = sortColumnId === column.id;
-                  const currentDirection = isCurrentSortColumn
-                    ? sortDirection
-                    : null;
+                {columns
+                  .filter((col) => !pinnedColumns[col.id])
+                  .map((column) => {
+                    const isSortable = !!column.isSortable;
+                    const isCurrentSortColumn = sortColumnId === column.id;
+                    const currentDirection = isCurrentSortColumn
+                      ? sortDirection
+                      : null;
 
-                  // Use DraggableTableHeader component here
-                  // We need to pass down props and the actual TH rendering logic
-                  return (
-                    <DraggableTableHeader
-                      key={column.id}
-                      column={column as ColumnConfig<T>}
-                      isSortable={isSortable}
-                      currentDirection={currentDirection}
-                      handleSort={handleSort}
-                      onResizeStart={handleResizeStart}
-                      width={columnWidths[column.id]}
-                      classNames={classNames?.header}
-                      onColumnChange={typedOnColumnChange}
-                      onColumnDelete={handleColumnDelete} // <-- Pass handler
-                    />
-                  );
-                })}
+                    // Use DraggableTableHeader component here
+                    // We need to pass down props and the actual TH rendering logic
+                    return (
+                      <DraggableTableHeader
+                        key={column.id}
+                        pinnedColumns={pinnedColumns}
+                        setPinnedColumns={setPinnedColumns}
+                        column={column as ColumnConfig<T>}
+                        isSortable={isSortable}
+                        currentDirection={currentDirection}
+                        handleSort={handleSort}
+                        onResizeStart={handleResizeStart}
+                        width={columnWidths[column.id]}
+                        classNames={classNames?.header}
+                        onColumnChange={typedOnColumnChange}
+                        onColumnDelete={handleColumnDelete} // <-- Pass handler
+                      />
+                    );
+                  })}
               </TableRow>
             </SortableContext>
           </TableHeader>
