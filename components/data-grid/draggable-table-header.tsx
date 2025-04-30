@@ -109,7 +109,7 @@ export function DraggableTableHeader<T>({
       ref={thRef}
       style={style}
       {...attributes}
-      className={cn("group relative", classNames?.cell)}
+      className={cn("group relative bg-zinc-100", classNames?.cell)}
     >
       {/* Dialog for Editing Column (replaces Popover) */}
       <Dialog open={isEditingColumn} onOpenChange={setIsEditingColumn}>

@@ -89,7 +89,7 @@ export function DataGridBody<
                   key={column.id}
                   style={cellStyle}
                   className={cn(
-                    "overflow-hidden whitespace-nowrap text-ellipsis align-middle",
+                    "overflow-hidden whitespace-nowrap bg-zinc-50/50 text-ellipsis align-middle",
                     classNames?.body?.cell
                   )}
                 >
