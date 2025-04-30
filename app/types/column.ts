@@ -21,6 +21,7 @@ export type CellValue =
   | undefined;
 
 type BaseColumnConfig<T> = {
+  icon?: React.ReactNode;
   id: string;
   header: React.ReactNode;
   minWidth?: number;

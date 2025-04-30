@@ -151,19 +151,20 @@ export function DraggableTableHeader<T>({
                 )}
                 {...(!column.isDraggable ? dndListeners : {})}
               >
+                {column.icon && <div className="mr-1">{column.icon}</div>}
                 {/* Header Content */}
                 <span className="truncate">{column.header}</span>
                 {/* Sort Icon */}
-                <div className="ml-auto flex-shrink-0 flex flex-col gap-[1px]">
+                <div className="ml-auto flex-shrink-0 flex flex-col ">
                   <ChevronUp
                     className={cn(
-                      "h-1.5 w-1.5 text-zinc-500",
+                      "h-0.5 w-0.5 text-zinc-500",
                       currentDirection === "asc" && "text-zinc-800"
                     )}
                   />
                   <ChevronDown
                     className={cn(
-                      "h-1.5 w-1.5 text-zinc-500",
+                      "h-0.5 w-0.5 text-zinc-500",
                       currentDirection === "desc" && "text-zinc-800"
                     )}
                   />
