@@ -134,7 +134,7 @@ export function MultiSelectCell({
           role="combobox"
           aria-expanded={isOpen}
           className={cn(
-            "w-full border-0 rounded-none justify-start font-normal truncate data-[state=open]:bg-accent",
+            "w-full border-0 rounded-lg justify-start font-normal truncate data-[state=open]:bg-accent",
             classNames?.multiSelectTrigger
           )}
         >

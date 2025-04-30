@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import {
   ChevronUp,
   ChevronDown,
-  ChevronsUpDown,
   GripVertical,
   MoreVertical,
 } from "lucide-react";
@@ -155,17 +154,20 @@ export function DraggableTableHeader<T>({
                 {/* Header Content */}
                 <span className="truncate">{column.header}</span>
                 {/* Sort Icon */}
-                <span className="ml-auto h-4 w-4 flex-shrink-0">
-                  {currentDirection === "asc" && (
-                    <ChevronUp className="h-4 w-4 text-foreground" />
-                  )}
-                  {currentDirection === "desc" && (
-                    <ChevronDown className="h-4 w-4 text-foreground" />
-                  )}
-                  {currentDirection === null && (
-                    <ChevronsUpDown className="h-4 w-4 text-muted-foreground/50" />
-                  )}
-                </span>
+                <div className="ml-auto flex-shrink-0 flex flex-col gap-[1px]">
+                  <ChevronUp
+                    className={cn(
+                      "h-1.5 w-1.5 text-zinc-500",
+                      currentDirection === "asc" && "text-zinc-800"
+                    )}
+                  />
+                  <ChevronDown
+                    className={cn(
+                      "h-1.5 w-1.5 text-zinc-500",
+                      currentDirection === "desc" && "text-zinc-800"
+                    )}
+                  />
+                </div>
               </Button>
             ) : (
               <div

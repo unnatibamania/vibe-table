@@ -16,10 +16,7 @@ export function NumberCell({ initialValue, onSave }: NumberCellProps) {
   );
   const inputRef = React.useRef<HTMLInputElement>(null);
 
-  console.log(`NumberCell (${initialValue}): Render, isEditing = ${isEditing}`); // Log render state
-
   const handleDoubleClick = () => {
-    console.log(`NumberCell (${initialValue}): handleDoubleClick triggered`); // Log event trigger
     setIsEditing(true);
   };
 
@@ -56,14 +53,12 @@ export function NumberCell({ initialValue, onSave }: NumberCellProps) {
 
   React.useEffect(() => {
     if (isEditing) {
-      console.log(`NumberCell (${initialValue}): useEffect - Focusing input`); // Log effect
       inputRef.current?.focus();
       inputRef.current?.select();
     }
   }, [isEditing]);
 
   if (isEditing) {
-    console.log(`NumberCell (${initialValue}): Rendering Input`); // Log rendering input
     return (
       <Input
         ref={inputRef}
@@ -78,7 +73,6 @@ export function NumberCell({ initialValue, onSave }: NumberCellProps) {
     );
   }
 
-  console.log(`NumberCell (${initialValue}): Rendering Div`); // Log rendering div
   return (
     <div
       onDoubleClick={handleDoubleClick}
