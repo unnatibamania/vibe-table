@@ -34,16 +34,22 @@ type BaseColumnConfig<T> = {
   cell: (row: T) => React.ReactNode;
 };
 
+export interface SelectOption {
+  label: string;
+  value: string;
+  icon?: React.ReactNode;
+}
+
 // Type union for all possible column configurations
 export type ColumnConfig<T> =
   | (BaseColumnConfig<T> & {
       type: "select";
-      selectOptions: string[];
+      selectOptions: SelectOption[];
       multiSelectOptions?: never;
     })
   | (BaseColumnConfig<T> & {
       type: "multi-select";
-      multiSelectOptions: string[];
+      multiSelectOptions: SelectOption[];
       selectOptions?: never;
     })
   | (BaseColumnConfig<T> & {

@@ -20,6 +20,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { SelectOption } from "@/app/types/column";
 
 // Define a list of color classes (Tailwind examples)
 // Using bg, border, and text colors with opacity where possible
@@ -57,7 +58,7 @@ type ComponentClassNames = {
 
 interface MultiSelectCellProps {
   initialValues: string[] | null | undefined;
-  options: string[];
+  options: SelectOption[];
   onSave: (newValues: string[] | null) => void;
   isEditable?: boolean;
   maxDisplay?: number; // Max badges to show before +x
@@ -181,11 +182,11 @@ export function MultiSelectCell({
             <CommandEmpty>No options found.</CommandEmpty>
             <CommandGroup>
               {options.map((option) => {
-                const isSelected = currentSelected.has(option);
+                const isSelected = currentSelected.has(option.value);
                 return (
                   <CommandItem
-                    key={option}
-                    onSelect={() => toggleOption(option)}
+                    key={option.value}
+                    onSelect={() => toggleOption(option.value)}
                     style={{ cursor: "pointer" }}
                     className={cn(classNames?.multiSelectItem)}
                   >
@@ -195,7 +196,7 @@ export function MultiSelectCell({
                         isSelected ? "opacity-100" : "opacity-0"
                       )}
                     />
-                    {option}
+                    {option.icon} {option.label}
                   </CommandItem>
                 );
               })}

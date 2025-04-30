@@ -245,7 +245,10 @@ const initialColumnsConfig: ColumnConfig<SampleRow>[] = [
     id: "department",
     header: "Department",
     type: "select",
-    selectOptions: departmentOptions,
+    selectOptions: departmentOptions.map((option) => ({
+      label: option,
+      value: option,
+    })),
     isEditable: true,
     isSortable: true,
     isDraggable: true,
@@ -258,7 +261,10 @@ const initialColumnsConfig: ColumnConfig<SampleRow>[] = [
     id: "skills",
     header: "Skills",
     type: "multi-select",
-    multiSelectOptions: skillOptions,
+    multiSelectOptions: skillOptions.map((option) => ({
+      label: option,
+      value: option,
+    })),
     isEditable: true,
     isSortable: true,
     isDraggable: true,

@@ -4,14 +4,13 @@ import * as React from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
+  DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button"; // Trigger will be a button
 import { ChevronDown } from "lucide-react"; // Icon for trigger
 import { cn } from "@/lib/utils";
+import { SelectOption } from "@/app/types/column";
 
 // Define reusable type
 type ComponentClassNames = {
@@ -23,7 +22,7 @@ type ComponentClassNames = {
 
 interface SelectCellProps {
   initialValue: string | null | undefined;
-  options: string[];
+  options: SelectOption[];
   onSave: (newValue: string | null) => void;
   isEditable?: boolean;
   classNames?: ComponentClassNames; // Accept classNames
@@ -56,7 +55,7 @@ export function SelectCell({
           variant="ghost"
           className={cn(
             // Base styles
-            "w-full border-0 rounded-none justify-between font-normal truncate data-[state=open]:bg-accent",
+            "w-full border-0 rounded-lg justify-between font-normal truncate data-[state=open]:bg-accent",
             // Custom trigger class
             classNames?.selectTrigger
           )}
@@ -74,32 +73,35 @@ export function SelectCell({
       {/* Apply content class */}
       <DropdownMenuContent
         align="start"
-        className={cn(classNames?.selectContent)}
+        className={cn("w-full flex flex-col gap-1", classNames?.selectContent)}
       >
         {" "}
         {/* Align dropdown with cell start */}
-        <DropdownMenuRadioGroup
+        {/* <DropdownMenuRadioGroup
           value={currentValue}
           onValueChange={handleValueChange}
-        >
-          {/* Option to clear the selection */}
-          <DropdownMenuRadioItem
+        > */}
+        {/* Option to clear the selection */}
+        {/* <DropdownMenuRadioItem
             value="__clear__"
             className={cn(classNames?.selectItem)}
           >
             <em>(Clear)</em>
-          </DropdownMenuRadioItem>
-          <DropdownMenuSeparator />
-          {options.map((option) => (
-            <DropdownMenuRadioItem
-              key={option}
-              value={option}
-              className={cn(classNames?.selectItem)}
-            >
-              {option}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
+          </DropdownMenuRadioItem> */}
+        {options.map((option) => (
+          <DropdownMenuItem
+            key={option.value}
+            className={cn(
+              "cursor-pointer",
+              option.value === currentValue && "bg-accent",
+              classNames?.selectItem
+            )}
+            onClick={() => handleValueChange(option.value)}
+          >
+            {option.icon} {option.label}
+          </DropdownMenuItem>
+        ))}
+        {/* </DropdownMenuRadioGroup> */}
       </DropdownMenuContent>
     </DropdownMenu>
   );
