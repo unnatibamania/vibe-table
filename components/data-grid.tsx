@@ -1,31 +1,27 @@
 "use client";
 
 import * as React from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"; // Reverted path, assuming alias is correct
-import type { ColumnConfig, CellValue, ColumnType } from "@/app/types/column"; // Import CellValue and ColumnType
-import { TextCell } from "@/components/cells/text-cell"; // Corrected import path
-import { NumberCell } from "@/components/cells/number-cell"; // Added NumberCell
-import { BooleanCell } from "@/components/cells/boolean-cell"; // Import BooleanCell
-import { DateCell } from "@/components/cells/date-cell"; // Import DateCell
-import { SelectCell } from "@/components/cells/select-cell"; // Import SelectCell
-import { MultiSelectCell } from "@/components/cells/multi-select-cell"; // Import MultiSelectCell
-import { ToggleCell } from "@/components/cells/toggle-cell"; // Import ToggleCell
-import { RatingCell } from "@/components/cells/rating-cell"; // Import RatingCell
-import { Button } from "@/components/ui/button"; // Import Button
-import {
-  ChevronUp,
-  ChevronDown,
-  ChevronsUpDown,
-  GripVertical,
-  MoreVertical,
-} from "lucide-react"; // Import all needed sort icons
+import { Table, TableHead, TableHeader, TableRow } from "@/components/ui/table"; // Reverted path, assuming alias is correct
+import type {
+  ColumnConfig,
+  CellValue /*, ColumnType*/,
+} from "@/app/types/column"; // Import CellValue // Removed ColumnType
+// import { TextCell } from "@/components/cells/text-cell"; // Corrected import path
+// import { NumberCell } from "@/components/cells/number-cell"; // Added NumberCell
+// import { BooleanCell } from "@/components/cells/boolean-cell"; // Import BooleanCell
+// import { DateCell } from "@/components/cells/date-cell"; // Import DateCell
+// import { SelectCell } from "@/components/cells/select-cell"; // Import SelectCell
+// import { MultiSelectCell } from "@/components/cells/multi-select-cell"; // Import MultiSelectCell
+// import { ToggleCell } from "@/components/cells/toggle-cell"; // Import ToggleCell
+// import { RatingCell } from "@/components/cells/rating-cell"; // Import RatingCell
+// import { Button } from "@/components/ui/button"; // Removed unused import
+// import {
+//   ChevronUp,
+//   ChevronDown,
+//   ChevronsUpDown,
+//   GripVertical,
+//   MoreVertical,
+// } from "lucide-react"; // Removed unused imports
 // --- dnd-kit imports ---
 import {
   DndContext,
@@ -41,70 +37,21 @@ import {
   arrayMove,
   SortableContext,
   horizontalListSortingStrategy,
-  useSortable,
+  // useSortable, // Removed unused import
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+// import { CSS } from "@dnd-kit/utilities"; // Removed unused import
 import { Checkbox } from "@/components/ui/checkbox"; // Import Checkbox
 import { cn } from "@/lib/utils"; // Need cn for merging classes
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-
-// --- Class Name Definitions ---
-interface DataGridClassNames {
-  root?: string;
-  table?: string;
-  header?: {
-    wrapper?: string;
-    row?: string;
-    cell?: string;
-    dragHandle?: string;
-    resizeHandle?: string;
-  };
-  body?: {
-    wrapper?: string;
-    row?: string;
-    selectedRow?: string;
-    cell?: string;
-  };
-  components?: {
-    badge?: string;
-    checkbox?: string;
-    ratingStar?: string;
-    toggleSwitch?: string;
-    dateTrigger?: string;
-    calendar?: string;
-    selectTrigger?: string;
-    selectContent?: string;
-    selectItem?: string;
-    multiSelectTrigger?: string;
-    multiSelectContent?: string;
-    multiSelectCommand?: string;
-    multiSelectInput?: string;
-    multiSelectItem?: string;
-  };
-}
-// --- End Class Name Definitions ---
+// import {
+//   DropdownMenu,
+//   DropdownMenuContent,
+//   DropdownMenuItem,
+//   DropdownMenuSeparator,
+//   DropdownMenuTrigger,
+// } from "@/components/ui/dropdown-menu"; // Removed unused imports
+import { DraggableTableHeader } from "./data-grid/draggable-table-header"; // <-- Import DraggableTableHeader
+import type { DataGridClassNames, SortDirection } from "./data-grid/types"; // <-- Import types
+import { DataGridBody } from "./data-grid/data-grid-body"; // <-- Import DataGridBody
 
 // Define the props for the DataGrid component
 interface DataGridProps<
@@ -118,351 +65,10 @@ interface DataGridProps<
   onRowChange: (rowIndex: number, columnId: string, newValue: unknown) => void;
   enableRowSelection?: boolean; // Prop to enable/disable row selection
   onSelectionChange?: (selectedIds: Set<string | number>) => void; // Callback for selection changes
-  classNames?: DataGridClassNames; // Add classNames prop
+  classNames?: DataGridClassNames; // Use imported type
   onColumnChange?: (updatedColumn: ColumnConfig<T>) => void; // Add prop definition
   onColumnDelete?: (columnId: string) => void; // <-- Add onColumnDelete prop
 }
-
-// Define Sort Direction type
-type SortDirection = "asc" | "desc";
-
-// --- Edit Column Form Component ---
-const EditColumnForm = <T,>({
-  column,
-  onSave,
-}: {
-  column: ColumnConfig<T>;
-  onSave: (config: ColumnConfig<T>) => void;
-}) => {
-  // Store individual fields in state
-  const [headerText, setHeaderText] = React.useState(
-    typeof column.header === "string" ? column.header : column.id
-  );
-  const [selectedType, setSelectedType] = React.useState<ColumnType>(
-    column.type
-  );
-  const [isEditable, setIsEditable] = React.useState(!!column.isEditable);
-  const [isSortable, setIsSortable] = React.useState(!!column.isSortable);
-  const [isResizable, setIsResizable] = React.useState(!!column.isResizable);
-  const [isDraggable, setIsDraggable] = React.useState(!!column.isDraggable);
-  const [isDeletable, setIsDeletable] = React.useState(!!column.isDeletable);
-  const [isHidden, setIsHidden] = React.useState(!!column.isHidden);
-
-  const availableTypes: Exclude<ColumnType, "user">[] = [
-    "text",
-    "number",
-    "date",
-    "boolean",
-    "select",
-    "multi-select",
-    "rating",
-    "toggle",
-    "checkbox",
-  ];
-
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    // Construct config and assert its type
-    const updatedConfig = {
-      ...column,
-      header: headerText,
-      type: selectedType,
-      isEditable,
-      isSortable,
-      isResizable,
-      isDraggable,
-      isDeletable,
-      isHidden,
-      selectOptions:
-        selectedType === "select" ? column.selectOptions || [] : undefined,
-      multiSelectOptions:
-        selectedType === "multi-select"
-          ? column.multiSelectOptions || []
-          : undefined,
-    } as ColumnConfig<T>; // Assert the final constructed object's type
-    onSave(updatedConfig);
-  };
-
-  const renderToggle = (
-    label: string,
-    checked: boolean,
-    onCheckedChange: (checked: boolean) => void
-  ) => (
-    <div className="flex items-center space-x-2 mb-2">
-      <Switch
-        id={`${column.id}-${label.toLowerCase().replace(" ", "-")}`}
-        checked={checked}
-        onCheckedChange={onCheckedChange}
-      />
-      <Label htmlFor={`${column.id}-${label.toLowerCase().replace(" ", "-")}`}>
-        {label}
-      </Label>
-    </div>
-  );
-
-  return (
-    <form onSubmit={handleSubmit} className="p-4 space-y-4 w-64">
-      {/* Column Header (Name) Input */}
-      <div>
-        <Label htmlFor={`${column.id}-header`}>Header Text</Label>
-        <Input
-          id={`${column.id}-header`}
-          value={headerText}
-          onChange={(e) => setHeaderText(e.target.value)}
-          placeholder="Column Name"
-        />
-      </div>
-
-      {/* Column Type Select */}
-      <div>
-        <Label htmlFor={`${column.id}-type`}>Column Type</Label>
-        <Select
-          value={selectedType}
-          onValueChange={(value) => setSelectedType(value as ColumnType)}
-        >
-          <SelectTrigger id={`${column.id}-type`}>
-            <SelectValue placeholder="Select type" />
-          </SelectTrigger>
-          <SelectContent>
-            {availableTypes.map((type) => (
-              <SelectItem key={type} value={type}>
-                {type}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Boolean Toggles */}
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2">
-        {renderToggle("Cell Editable", isEditable, setIsEditable)}
-        {renderToggle("Sortable", isSortable, setIsSortable)}
-        {renderToggle("Resizable", isResizable, setIsResizable)}
-        {renderToggle("Draggable", isDraggable, setIsDraggable)}
-        {renderToggle("Deletable", isDeletable, setIsDeletable)}
-        {renderToggle("Hidden", isHidden, setIsHidden)}
-      </div>
-
-      {/* TODO: Add inputs for minWidth, maxWidth, options based on type */}
-
-      <Button type="submit" size="sm">
-        Save Changes
-      </Button>
-    </form>
-  );
-};
-// --- End Edit Column Form Component ---
-
-// --- DraggableTableHeader needs to revert generic T and use any for ColumnConfig ---
-interface DraggableTableHeaderProps<T> {
-  column: ColumnConfig<T>;
-  isSortable: boolean;
-  currentDirection: SortDirection | null;
-  handleSort: (columnId: string) => void;
-  onResizeStart: (columnId: string, startX: number) => void;
-  width?: number;
-  classNames?: DataGridClassNames["header"];
-  onColumnChange?: (updatedColumn: ColumnConfig<T>) => void;
-  onColumnDelete?: (columnId: string) => void; // <-- Add onColumnDelete prop
-}
-
-function DraggableTableHeader<T>({
-  column,
-  isSortable,
-  currentDirection,
-  handleSort,
-  onResizeStart,
-  width,
-  classNames,
-  onColumnChange,
-  onColumnDelete, // <-- Destructure prop
-}: DraggableTableHeaderProps<T>) {
-  // Removed <T>
-  const {
-    attributes,
-    listeners: dndListeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: column.id,
-    disabled: !column.isDraggable,
-  });
-
-  const [isEditingColumn, setIsEditingColumn] = React.useState(false);
-
-  const handleMouseDown = (event: React.MouseEvent) => {
-    if (!column.isResizable) return;
-    // Prevent dnd starting if clicking resizer
-    event.preventDefault();
-    event.stopPropagation();
-    onResizeStart(column.id, event.clientX);
-  };
-
-  const thRef = React.useRef<HTMLTableCellElement>(null); // Ref for TH element
-  React.useEffect(() => {
-    setNodeRef(thRef.current);
-  }, [setNodeRef, thRef]);
-
-  const style: React.CSSProperties = {
-    transform: CSS.Translate.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    position: "relative", // Needed for absolute positioning of handle
-    width: width ? `${width}px` : undefined, // Apply width from state
-    minWidth: column.minWidth ? `${column.minWidth}px` : undefined,
-    maxWidth: column.maxWidth ? `${column.maxWidth}px` : undefined,
-    // cursor and touchAction handled by elements inside
-  };
-
-  const handleEditSave = (updatedConfig: ColumnConfig<T>) => {
-    // Use any
-    if (onColumnChange) {
-      onColumnChange(updatedConfig);
-    }
-    setIsEditingColumn(false);
-  };
-
-  // Prevent dropdown trigger from activating row drag/sort
-  const stopPropagation = (e: React.MouseEvent | React.TouchEvent) => {
-    e.stopPropagation();
-  };
-
-  return (
-    <TableHead
-      ref={thRef}
-      style={style}
-      {...attributes}
-      className={cn("group relative", classNames?.cell)}
-    >
-      {/* Dialog for Editing Column (replaces Popover) */}
-      <Dialog open={isEditingColumn} onOpenChange={setIsEditingColumn}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>
-              Edit Column:{" "}
-              {typeof column.header === "string" ? column.header : column.id}
-            </DialogTitle>
-          </DialogHeader>
-          <EditColumnForm column={column} onSave={handleEditSave} />
-        </DialogContent>
-      </Dialog>
-
-      <div className="flex items-center h-full justify-between">
-        {/* Left side: Drag Handle + Content + Sort */}
-        <div className="flex items-center flex-grow overflow-hidden mr-1">
-          {column.isDraggable && (
-            <span
-              {...dndListeners} // dnd listeners ONLY on the handle
-              className={cn(
-                "p-1 cursor-grab touch-none mr-1 self-stretch flex items-center",
-                classNames?.dragHandle
-              )}
-              aria-label="Drag to reorder column"
-              onMouseDown={stopPropagation} // Prevent text selection/drag conflict
-              onTouchStart={stopPropagation}
-            >
-              <GripVertical className="h-4 w-4 text-muted-foreground/70" />
-            </span>
-          )}
-          <div className="flex-grow overflow-hidden">
-            {isSortable ? (
-              <Button
-                variant="ghost"
-                onClick={() => handleSort(column.id)}
-                className={cn(
-                  "px-1 py-1 h-auto flex items-center w-full justify-start text-left",
-                  classNames?.cell
-                )}
-                {...(!column.isDraggable ? dndListeners : {})}
-              >
-                {/* Header Content */}
-                <span className="truncate">{column.header}</span>
-                {/* Sort Icon */}
-                <span className="ml-auto h-4 w-4 flex-shrink-0">
-                  {currentDirection === "asc" && (
-                    <ChevronUp className="h-4 w-4 text-foreground" />
-                  )}
-                  {currentDirection === "desc" && (
-                    <ChevronDown className="h-4 w-4 text-foreground" />
-                  )}
-                  {currentDirection === null && (
-                    <ChevronsUpDown className="h-4 w-4 text-muted-foreground/50" />
-                  )}
-                </span>
-              </Button>
-            ) : (
-              <div
-                className={cn(
-                  "px-2 py-1 h-full flex items-center",
-                  classNames?.cell
-                )}
-                {...(!column.isDraggable ? dndListeners : {})}
-              >
-                {column.header}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right side: Actions Menu + Resize Handle */}
-        <div className="flex items-center flex-shrink-0 ml-1 space-x-1">
-          {/* Actions Dropdown Menu */}
-          {(column.isEditable || column.isDeletable) &&
-            (onColumnChange || onColumnDelete) && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0"
-                    onMouseDown={stopPropagation} // Prevent drag/sort activation
-                    onTouchStart={stopPropagation}
-                    aria-label="Column actions"
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {column.isEditable && onColumnChange && (
-                    <DropdownMenuItem onSelect={() => setIsEditingColumn(true)}>
-                      Edit
-                    </DropdownMenuItem>
-                  )}
-                  {column.isEditable &&
-                    onColumnChange &&
-                    column.isDeletable &&
-                    onColumnDelete && <DropdownMenuSeparator />}
-                  {column.isDeletable && onColumnDelete && (
-                    <DropdownMenuItem
-                      onSelect={() => onColumnDelete(column.id)}
-                      className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                    >
-                      Delete
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-
-          {/* Resize Handle (conditionally rendered outside dropdown) */}
-          {column.isResizable && (
-            <div
-              onMouseDown={handleMouseDown}
-              className={cn(
-                `absolute top-0 bottom-0 -right-1 w-0.5 cursor-col-resize group-hover:bg-zinc-500 select-none touch-none z-10`,
-                classNames?.resizeHandle
-              )}
-              aria-label="Resize column"
-            />
-          )}
-        </div>
-      </div>
-    </TableHead>
-  );
-}
-// --- End DraggableTableHeader ---
 
 // The main DataGrid component
 export function DataGrid<
@@ -868,168 +474,16 @@ export function DataGrid<
               </TableRow>
             </SortableContext>
           </TableHeader>
-          <TableBody className={cn(classNames?.body?.wrapper)}>
-            {sortedRows.map((row, rowIndex) => {
-              const isSelected = selectedRowIds.has(row.id);
-              return (
-                // Add visual indication for selected rows
-                <TableRow
-                  key={row.id}
-                  data-state={isSelected ? "selected" : ""}
-                  className={cn(
-                    "h-10 py-2",
-                    classNames?.body?.row,
-                    isSelected && classNames?.body?.selectedRow
-                  )}
-                >
-                  {/* Selection Cell */}
-                  {enableRowSelection && (
-                    <TableCell className={cn("p-0", classNames?.body?.cell)}>
-                      <div className="flex items-center justify-center h-full">
-                        <Checkbox
-                          checked={isSelected}
-                          onCheckedChange={(checked) =>
-                            handleSelectRow(row.id, checked)
-                          }
-                          aria-label={`Select row ${rowIndex + 1}`}
-                          className={cn(classNames?.components?.checkbox)}
-                        />
-                      </div>
-                    </TableCell>
-                  )}
-
-                  {columns.map((column) => {
-                    const initialValue = row[column.id];
-                    const cellStyle: React.CSSProperties = {
-                      width: columnWidths[column.id]
-                        ? `${columnWidths[column.id]}px`
-                        : undefined,
-                      minWidth: column.minWidth
-                        ? `${column.minWidth}px`
-                        : undefined,
-                      maxWidth: column.maxWidth
-                        ? `${column.maxWidth}px`
-                        : undefined,
-                    };
-                    return (
-                      <TableCell
-                        key={column.id}
-                        style={cellStyle}
-                        className={cn(
-                          "overflow-hidden whitespace-nowrap text-ellipsis align-middle",
-                          classNames?.body?.cell
-                        )}
-                      >
-                        {column.type === "text" ? (
-                          <TextCell
-                            initialValue={String(initialValue ?? "")}
-                            onSave={(newValue: string) =>
-                              handleSave(rowIndex, column.id, newValue)
-                            }
-                          />
-                        ) : column.type === "number" ? (
-                          <NumberCell
-                            initialValue={
-                              typeof initialValue === "number"
-                                ? initialValue
-                                : null
-                            }
-                            onSave={(newValue: number | null) =>
-                              handleSave(rowIndex, column.id, newValue)
-                            }
-                          />
-                        ) : column.type === "boolean" ||
-                          column.type === "checkbox" ? (
-                          <BooleanCell
-                            initialValue={
-                              typeof initialValue === "boolean"
-                                ? initialValue
-                                : null
-                            }
-                            isEditable={column.isEditable}
-                            onSave={(newValue: boolean) =>
-                              handleSave(rowIndex, column.id, newValue)
-                            }
-                            classNames={classNames?.components}
-                          />
-                        ) : column.type === "date" ? (
-                          <DateCell
-                            initialValue={
-                              initialValue instanceof Date ? initialValue : null
-                            }
-                            isEditable={column.isEditable}
-                            onSave={(newValue: Date | null) =>
-                              handleSave(rowIndex, column.id, newValue)
-                            }
-                            classNames={classNames?.components}
-                          />
-                        ) : column.type === "select" ? (
-                          <SelectCell
-                            initialValue={
-                              typeof initialValue === "string"
-                                ? initialValue
-                                : null
-                            }
-                            options={column.selectOptions || []}
-                            isEditable={column.isEditable}
-                            onSave={(newValue: string | null) =>
-                              handleSave(rowIndex, column.id, newValue)
-                            }
-                            classNames={classNames?.components}
-                          />
-                        ) : column.type === "multi-select" ? (
-                          <MultiSelectCell
-                            initialValues={
-                              Array.isArray(initialValue)
-                                ? initialValue.filter(
-                                    (v): v is string => typeof v === "string"
-                                  )
-                                : null
-                            }
-                            options={column.multiSelectOptions || []}
-                            isEditable={column.isEditable}
-                            onSave={(newValue: string[] | null) =>
-                              handleSave(rowIndex, column.id, newValue)
-                            }
-                            classNames={classNames?.components}
-                          />
-                        ) : column.type === "toggle" ? (
-                          <ToggleCell
-                            initialValue={
-                              typeof initialValue === "boolean"
-                                ? initialValue
-                                : null
-                            }
-                            isEditable={column.isEditable}
-                            onSave={(newValue: boolean) =>
-                              handleSave(rowIndex, column.id, newValue)
-                            }
-                            classNames={classNames?.components}
-                          />
-                        ) : column.type === "rating" ? (
-                          <RatingCell
-                            initialValue={
-                              typeof initialValue === "number"
-                                ? initialValue
-                                : null
-                            }
-                            isEditable={column.isEditable}
-                            onSave={(newValue: number | null) =>
-                              handleSave(rowIndex, column.id, newValue)
-                            }
-                            classNames={classNames?.components}
-                          />
-                        ) : (
-                          // Default case: Render directly, no extra div/padding needed
-                          column.cell(row)
-                        )}
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              );
-            })}
-          </TableBody>
+          <DataGridBody
+            rows={sortedRows}
+            columns={columns}
+            selectedRowIds={selectedRowIds}
+            handleSelectRow={handleSelectRow}
+            handleSave={handleSave}
+            columnWidths={columnWidths}
+            enableRowSelection={enableRowSelection}
+            classNames={classNames}
+          />
         </Table>
       </div>
       {/* Drag Overlay for visual feedback */}
