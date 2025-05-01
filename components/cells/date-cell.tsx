@@ -69,7 +69,7 @@ export function DateCell({
         <Button
           variant={"outline"}
           className={cn(
-            "w-full flex items-center justify-start text-left font-normal border-0 rounded-none",
+            "w-full flex items-center justify-start text-left shadow-none rounded-lg font-normal border-0 bg-transparent",
             !currentDate && "text-muted-foreground",
             classNames?.dateTrigger
           )}

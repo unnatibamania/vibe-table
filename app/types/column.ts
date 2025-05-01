@@ -8,7 +8,8 @@ export type ColumnType =
   | "user"
   | "rating"
   | "toggle"
-  | "checkbox";
+  | "checkbox"
+  | "custom";
 
 // Define possible cell value types
 export type CellValue =
@@ -21,8 +22,9 @@ export type CellValue =
   | undefined;
 
 type BaseColumnConfig<T> = {
+  icon?: React.ReactNode;
   id: string;
-  header: React.ReactNode;
+  header: string;
   minWidth?: number;
   maxWidth?: number;
   isSortable?: boolean;
@@ -34,16 +36,22 @@ type BaseColumnConfig<T> = {
   cell: (row: T) => React.ReactNode;
 };
 
+export interface SelectOption {
+  label: string;
+  value: string;
+  icon?: React.ReactNode;
+}
+
 // Type union for all possible column configurations
 export type ColumnConfig<T> =
   | (BaseColumnConfig<T> & {
       type: "select";
-      selectOptions: string[];
+      selectOptions: SelectOption[];
       multiSelectOptions?: never;
     })
   | (BaseColumnConfig<T> & {
       type: "multi-select";
-      multiSelectOptions: string[];
+      multiSelectOptions: SelectOption[];
       selectOptions?: never;
     })
   | (BaseColumnConfig<T> & {

@@ -20,6 +20,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { SelectOption } from "@/app/types/column";
 
 // Define a list of color classes (Tailwind examples)
 // Using bg, border, and text colors with opacity where possible
@@ -57,7 +58,7 @@ type ComponentClassNames = {
 
 interface MultiSelectCellProps {
   initialValues: string[] | null | undefined;
-  options: string[];
+  options: SelectOption[];
   onSave: (newValues: string[] | null) => void;
   isEditable?: boolean;
   maxDisplay?: number; // Max badges to show before +x
@@ -121,9 +122,14 @@ export function MultiSelectCell({
     });
   };
 
-  const displayValues = Array.from(selectedValues);
-  const displayBadges = displayValues.slice(0, maxDisplay);
-  const overflowCount = displayValues.length - maxDisplay;
+  // const displayBadges = displayValues.slice(0, maxDisplay);
+  // const overflowCount = displayValues.length - maxDisplay;
+
+  const displayBadges = options.filter((option) =>
+    selectedValues.has(option.value)
+  );
+
+  const overflowCount = displayBadges.length - maxDisplay;
 
   return (
     <Popover open={isOpen} onOpenChange={handlePopoverOpenChange}>
@@ -133,7 +139,7 @@ export function MultiSelectCell({
           role="combobox"
           aria-expanded={isOpen}
           className={cn(
-            "w-full border-0 rounded-none justify-start font-normal truncate data-[state=open]:bg-accent",
+            "w-full border-0 rounded-lg justify-start font-normal truncate data-[state=open]:bg-accent",
             classNames?.multiSelectTrigger
           )}
         >
@@ -141,14 +147,14 @@ export function MultiSelectCell({
             {displayBadges.length > 0 ? (
               displayBadges.map((value) => (
                 <Badge
-                  key={value}
+                  key={value.value}
                   className={cn(
                     "whitespace-nowrap px-1.5 py-0.5 text-xs rounded-full font-medium ",
-                    getColorClass(value),
+                    getColorClass(value.value),
                     classNames?.badge
                   )}
                 >
-                  {value}
+                  {value.icon} {value.label}
                 </Badge>
               ))
             ) : (
@@ -181,11 +187,11 @@ export function MultiSelectCell({
             <CommandEmpty>No options found.</CommandEmpty>
             <CommandGroup>
               {options.map((option) => {
-                const isSelected = currentSelected.has(option);
+                const isSelected = currentSelected.has(option.value);
                 return (
                   <CommandItem
-                    key={option}
-                    onSelect={() => toggleOption(option)}
+                    key={option.value}
+                    onSelect={() => toggleOption(option.value)}
                     style={{ cursor: "pointer" }}
                     className={cn(classNames?.multiSelectItem)}
                   >
@@ -195,7 +201,7 @@ export function MultiSelectCell({
                         isSelected ? "opacity-100" : "opacity-0"
                       )}
                     />
-                    {option}
+                    {option.icon} {option.label}
                   </CommandItem>
                 );
               })}

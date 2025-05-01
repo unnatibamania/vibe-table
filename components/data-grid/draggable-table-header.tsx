@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import {
   ChevronUp,
   ChevronDown,
-  ChevronsUpDown,
   GripVertical,
   MoreVertical,
 } from "lucide-react";
@@ -113,7 +112,7 @@ export function DraggableTableHeader<T>({
       ref={thRef}
       style={style}
       {...attributes}
-      className={cn("group relative", classNames?.cell)}
+      className={cn("group relative bg-zinc-100", classNames?.cell)}
     >
       {/* Dialog for Editing Column (replaces Popover) */}
       <Dialog open={isEditingColumn} onOpenChange={setIsEditingColumn}>
@@ -156,20 +155,26 @@ export function DraggableTableHeader<T>({
                 )}
                 {...(!column.isDraggable ? dndListeners : {})}
               >
+                {column.icon ? <div className="mr-1">{column.icon}</div> : null}
                 {/* Header Content */}
                 <span className="truncate">{column.header}</span>
                 {/* Sort Icon */}
-                <span className="ml-auto h-4 w-4 flex-shrink-0">
-                  {currentDirection === "asc" && (
-                    <ChevronUp className="h-4 w-4 text-foreground" />
-                  )}
-                  {currentDirection === "desc" && (
-                    <ChevronDown className="h-4 w-4 text-foreground" />
-                  )}
-                  {currentDirection === null && (
-                    <ChevronsUpDown className="h-4 w-4 text-muted-foreground/50" />
-                  )}
-                </span>
+                <div className="ml-auto  cursor-pointer flex flex-col ">
+                  <ChevronUp
+                    size={8}
+                    className={cn(
+                      " text-zinc-500",
+                      currentDirection === "asc" && "text-zinc-800"
+                    )}
+                  />
+                  <ChevronDown
+                    size={8}
+                    className={cn(
+                      " text-zinc-500",
+                      currentDirection === "desc" && "text-zinc-800"
+                    )}
+                  />
+                </div>
               </Button>
             ) : (
               <div
@@ -179,6 +184,7 @@ export function DraggableTableHeader<T>({
                 )}
                 {...(!column.isDraggable ? dndListeners : {})}
               >
+                {column.icon ? <div className="mr-2">{column.icon}</div> : null}
                 {column.header}
               </div>
             )}

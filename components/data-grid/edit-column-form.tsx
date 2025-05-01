@@ -21,9 +21,7 @@ export const EditColumnForm = <T,>({
   onSave: (config: ColumnConfig<T>) => void;
 }) => {
   // Store individual fields in state
-  const [headerText, setHeaderText] = React.useState(
-    typeof column.header === "string" ? column.header : column.id
-  );
+  const [headerText, setHeaderText] = React.useState("");
   const [selectedType, setSelectedType] = React.useState<ColumnType>(
     column.type
   );
@@ -87,7 +85,7 @@ export const EditColumnForm = <T,>({
   );
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 space-y-4 w-64">
+    <form onSubmit={handleSubmit} className="p-4  space-y-4 w-64">
       {/* Column Header (Name) Input */}
       <div>
         <Label htmlFor={`${column.id}-header`}>Header Text</Label>

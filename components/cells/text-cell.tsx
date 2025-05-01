@@ -57,7 +57,10 @@ export function TextCell({ initialValue, onSave }: TextCellProps) {
   }
 
   return (
-    <div onDoubleClick={handleDoubleClick} className="cursor-pointer truncate">
+    <div
+      onDoubleClick={handleDoubleClick}
+      className="cursor-pointer flex items-center justify-center truncate"
+    >
       {value === "" ? "-" : value}
     </div>
   );
