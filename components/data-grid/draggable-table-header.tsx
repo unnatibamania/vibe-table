@@ -151,7 +151,7 @@ export function DraggableTableHeader<T>({
                 )}
                 {...(!column.isDraggable ? dndListeners : {})}
               >
-                {column.icon && <div className="mr-1">{column.icon}</div>}
+                {column.icon ? <div className="mr-1">{column.icon}</div> : null}
                 {/* Header Content */}
                 <span className="truncate">{column.header}</span>
                 {/* Sort Icon */}
@@ -180,6 +180,7 @@ export function DraggableTableHeader<T>({
                 )}
                 {...(!column.isDraggable ? dndListeners : {})}
               >
+                {column.icon ? <div className="mr-2">{column.icon}</div> : null}
                 {column.header}
               </div>
             )}

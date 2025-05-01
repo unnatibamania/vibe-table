@@ -420,6 +420,7 @@ export function DataGrid<
       >
         <Table
           ref={tableRef}
+          suppressHydrationWarning
           className={cn("w-full border-collapse", classNames?.table)}
         >
           <TableHeader className={cn(classNames?.header?.wrapper)}>

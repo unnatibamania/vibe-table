@@ -8,7 +8,8 @@ export type ColumnType =
   | "user"
   | "rating"
   | "toggle"
-  | "checkbox";
+  | "checkbox"
+  | "custom";
 
 // Define possible cell value types
 export type CellValue =

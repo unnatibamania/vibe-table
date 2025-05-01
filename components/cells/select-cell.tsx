@@ -47,6 +47,8 @@ export function SelectCell({
     }
   };
 
+  const currentOption = options.find((option) => option.value === currentValue);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild disabled={!isEditable}>
@@ -61,7 +63,12 @@ export function SelectCell({
           )}
         >
           <span className="truncate">
-            {currentValue || (
+            {currentOption ? (
+              <div className="flex items-center gap-2">
+                {currentOption.icon}
+                {currentOption.label}
+              </div>
+            ) : (
               <span className="text-muted-foreground">(empty)</span>
             )}
           </span>
@@ -75,19 +82,6 @@ export function SelectCell({
         align="start"
         className={cn("w-full flex flex-col gap-1", classNames?.selectContent)}
       >
-        {" "}
-        {/* Align dropdown with cell start */}
-        {/* <DropdownMenuRadioGroup
-          value={currentValue}
-          onValueChange={handleValueChange}
-        > */}
-        {/* Option to clear the selection */}
-        {/* <DropdownMenuRadioItem
-            value="__clear__"
-            className={cn(classNames?.selectItem)}
-          >
-            <em>(Clear)</em>
-          </DropdownMenuRadioItem> */}
         {options.map((option) => (
           <DropdownMenuItem
             key={option.value}

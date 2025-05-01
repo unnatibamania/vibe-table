@@ -122,9 +122,14 @@ export function MultiSelectCell({
     });
   };
 
-  const displayValues = Array.from(selectedValues);
-  const displayBadges = displayValues.slice(0, maxDisplay);
-  const overflowCount = displayValues.length - maxDisplay;
+  // const displayBadges = displayValues.slice(0, maxDisplay);
+  // const overflowCount = displayValues.length - maxDisplay;
+
+  const displayBadges = options.filter((option) =>
+    selectedValues.has(option.value)
+  );
+
+  const overflowCount = displayBadges.length - maxDisplay;
 
   return (
     <Popover open={isOpen} onOpenChange={handlePopoverOpenChange}>
@@ -142,14 +147,14 @@ export function MultiSelectCell({
             {displayBadges.length > 0 ? (
               displayBadges.map((value) => (
                 <Badge
-                  key={value}
+                  key={value.value}
                   className={cn(
                     "whitespace-nowrap px-1.5 py-0.5 text-xs rounded-full font-medium ",
-                    getColorClass(value),
+                    getColorClass(value.value),
                     classNames?.badge
                   )}
                 >
-                  {value}
+                  {value.icon} {value.label}
                 </Badge>
               ))
             ) : (
