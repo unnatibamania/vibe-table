@@ -163,7 +163,7 @@ export const hrColumns: ColumnConfig<HRRow>[] = [
       { label: "HR", value: "hr", icon: <Users /> },
     ],
     minWidth: 400,
-    maxWidth: 600,
+    maxWidth: 800,
   },
   {
     icon: <Code size={16} />,

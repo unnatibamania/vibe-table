@@ -12,7 +12,7 @@ import {
   DialogTrigger,
   DialogDescription,
 } from "@/components/ui/dialog"; // Import Dialog components
-import { EditColumnForm } from "@/components/data-grid/edit-column-form"; // Corrected path
+import { EditColumnForm } from "@/components/edit-column-form"; // Import the new form
 import { cn } from "@/lib/utils";
 
 import { hrColumns, hrData, HRRow } from "@/constants/hr";
@@ -25,6 +25,7 @@ export default function Home() {
   );
   const [columns, setColumns] =
     React.useState<ColumnConfig<HRRow>[]>(hrColumns);
+
   const [isAddingColumn, setIsAddingColumn] = React.useState(false); // State for Add Column dialog
 
   const handleRowChange = (
@@ -330,7 +331,7 @@ export default function Home() {
         <div className="flex space-x-2 w-full justify-end mb-4">
           {/* Add Column Dialog Trigger and Content */}
           <Dialog open={isAddingColumn} onOpenChange={setIsAddingColumn}>
-            <DialogTrigger asChild>
+            <DialogTrigger>
               <Button variant="outline">Add Column</Button>
             </DialogTrigger>
             <DialogContent className="w-full">

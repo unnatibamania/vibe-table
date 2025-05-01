@@ -21,9 +21,7 @@ export const EditColumnForm = <T,>({
   onSave: (config: ColumnConfig<T>) => void;
 }) => {
   // Store individual fields in state
-  const [headerText, setHeaderText] = React.useState(
-    typeof column.header === "string" ? column.header : column.id
-  );
+  const [headerText, setHeaderText] = React.useState("");
   const [selectedType, setSelectedType] = React.useState<ColumnType>(
     column.type
   );

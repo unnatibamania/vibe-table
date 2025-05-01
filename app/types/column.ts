@@ -24,7 +24,7 @@ export type CellValue =
 type BaseColumnConfig<T> = {
   icon?: React.ReactNode;
   id: string;
-  header: React.ReactNode;
+  header: string;
   minWidth?: number;
   maxWidth?: number;
   isSortable?: boolean;
