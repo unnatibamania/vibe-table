@@ -414,6 +414,18 @@ export function DataGrid<
   };
   // --- End Column Deletion Handler ---
 
+  // --- Filter Columns based on pinning ---
+  const nonPinnedColumns = columns.filter((col) => !pinnedColumns[col.id]);
+  const pinnedColumnsData = columns.filter((col) => pinnedColumns[col.id]);
+
+  // --- Calculate width for pinned area offset ---
+  const totalPinnedWidth = React.useMemo(() => {
+    return pinnedColumnsData.reduce((total, col) => {
+      const width = columnWidths[col.id] || col.minWidth || 150; // Same logic as in PinnedTable
+      return total + width;
+    }, 0);
+  }, [pinnedColumnsData, columnWidths]);
+
   return (
     <DndContext
       sensors={sensors}
@@ -424,67 +436,74 @@ export function DataGrid<
     >
       <div
         className={cn(
-          "rounded-md relative border z-20 overflow-x-auto",
+          "rounded-md relative border overflow-hidden", // Remove overflow-x-auto here
           classNames?.root
         )}
       >
-        {Object.keys(pinnedColumns).length > 0 && (
+        {/* Pinned Table Area */}
+        {pinnedColumnsData.length > 0 && (
           <PinnedTable
-            pinnedColumns={columns.filter((col) => pinnedColumns[col.id])}
-            rows={rows}
+            pinnedColumns={pinnedColumnsData}
+            rows={sortedRows} // Use sorted rows
             classNames={classNames}
+            columnWidths={columnWidths}
+            handleSave={handleSave}
+            selectedRowIds={selectedRowIds}
+            // Pass other needed props if PinnedTable cells become interactive
           />
         )}
-        <Table
-          ref={tableRef}
-          suppressHydrationWarning
-          className={cn("w-full border-collapse", classNames?.table)}
+        {/* Scrollable Main Table Area */}
+        <div
+          className="overflow-x-auto relative" // Add overflow-x-auto here
+          style={{ paddingLeft: `${totalPinnedWidth}px` }} // Offset by pinned width
         >
-          <TableHeader className={cn(classNames?.header?.wrapper)}>
-            <SortableContext
-              items={columnOrder}
-              strategy={horizontalListSortingStrategy}
-            >
-              <TableRow
-                className={cn(
-                  "bg-muted hover:bg-muted/80",
-                  classNames?.header?.row
-                )}
+          <Table
+            ref={tableRef}
+            suppressHydrationWarning
+            className={cn("border-collapse min-w-full", classNames?.table)} // Ensure it tries to fill
+            style={{ width: "auto" }} // Let it grow
+          >
+            <TableHeader className={cn(classNames?.header?.wrapper)}>
+              <SortableContext
+                items={nonPinnedColumns.map((c) => c.id)} // Sort only non-pinned
+                strategy={horizontalListSortingStrategy}
               >
-                {/* Selection Header */}
-                {enableRowSelection && (
-                  <TableHead
-                    style={{ width: "50px", minWidth: "50px" }}
-                    className={cn("relative p-0", classNames?.header?.cell)}
-                  >
-                    <div className="flex items-center justify-center h-full">
-                      <Checkbox
-                        checked={headerCheckboxState}
-                        onCheckedChange={handleSelectAll}
-                        aria-label="Select all rows"
-                        className={cn(classNames?.components?.checkbox)}
-                      />
-                    </div>
-                  </TableHead>
-                )}
+                <TableRow
+                  className={cn(
+                    "bg-muted hover:bg-muted/80",
+                    classNames?.header?.row
+                  )}
+                >
+                  {/* Selection Header (if enabled) */}
+                  {enableRowSelection && (
+                    <TableHead
+                      style={{ width: "50px", minWidth: "50px" }}
+                      className={cn("relative p-0", classNames?.header?.cell)}
+                    >
+                      <div className="flex items-center justify-center h-full">
+                        <Checkbox
+                          checked={headerCheckboxState}
+                          onCheckedChange={handleSelectAll}
+                          aria-label="Select all rows"
+                          className={cn(classNames?.components?.checkbox)}
+                        />
+                      </div>
+                    </TableHead>
+                  )}
 
-                {/* Draggable & Resizable Column Headers */}
-                {columns
-                  .filter((col) => !pinnedColumns[col.id])
-                  .map((column) => {
+                  {/* Draggable & Resizable Column Headers (Non-Pinned) */}
+                  {nonPinnedColumns.map((column) => {
                     const isSortable = !!column.isSortable;
                     const isCurrentSortColumn = sortColumnId === column.id;
                     const currentDirection = isCurrentSortColumn
                       ? sortDirection
                       : null;
 
-                    // Use DraggableTableHeader component here
-                    // We need to pass down props and the actual TH rendering logic
                     return (
                       <DraggableTableHeader
                         key={column.id}
-                        pinnedColumns={pinnedColumns}
-                        setPinnedColumns={setPinnedColumns}
+                        pinnedColumns={pinnedColumns} // Pass state down
+                        setPinnedColumns={setPinnedColumns} // Pass setter down
                         column={column as ColumnConfig<T>}
                         isSortable={isSortable}
                         currentDirection={currentDirection}
@@ -493,32 +512,31 @@ export function DataGrid<
                         width={columnWidths[column.id]}
                         classNames={classNames?.header}
                         onColumnChange={typedOnColumnChange}
-                        onColumnDelete={handleColumnDelete} // <-- Pass handler
+                        onColumnDelete={handleColumnDelete}
                       />
                     );
                   })}
-              </TableRow>
-            </SortableContext>
-          </TableHeader>
-          <DataGridBody
-            rows={sortedRows}
-            columns={columns}
-            selectedRowIds={selectedRowIds}
-            handleSelectRow={handleSelectRow}
-            handleSave={handleSave}
-            columnWidths={columnWidths}
-            enableRowSelection={enableRowSelection}
-            classNames={classNames}
-            isLoading={isLoading}
-            skeletonComponent={skeletonComponent}
-          />
-        </Table>
+                </TableRow>
+              </SortableContext>
+            </TableHeader>
+            <DataGridBody
+              rows={sortedRows}
+              columns={nonPinnedColumns} // Pass only non-pinned columns
+              selectedRowIds={selectedRowIds}
+              handleSelectRow={handleSelectRow}
+              handleSave={handleSave}
+              columnWidths={columnWidths}
+              enableRowSelection={enableRowSelection}
+              classNames={classNames}
+              isLoading={isLoading}
+              skeletonComponent={skeletonComponent}
+            />
+          </Table>
+        </div>
       </div>
       {/* Drag Overlay for visual feedback */}
       <DragOverlay>
         {activeId && activeColumn ? (
-          // Render a representation of the header being dragged
-          // Needs styling to look like a table header
           <div
             style={{
               opacity: 0.9,
