@@ -27,17 +27,22 @@ import { EditColumnForm } from "./edit-column-form"; // Import the form componen
 import type { ColumnConfig } from "@/app/types/column"; // Assuming original path for now
 import type { DataGridClassNames, SortDirection } from "./types"; // Adjusted import
 
-// --- DraggableTableHeader needs to revert generic T and use any for ColumnConfig ---
+// Remove react-resizable import
+// import { Resizable } from "react-resizable";
+
+// --- DraggableTableHeader props ---
 interface DraggableTableHeaderProps<T> {
   column: ColumnConfig<T>;
   isSortable: boolean;
   currentDirection: SortDirection | null;
   handleSort: (columnId: string) => void;
-  onResizeStart: (columnId: string, startX: number) => void;
-  width?: number;
   classNames?: DataGridClassNames["header"];
   onColumnChange?: (updatedColumn: ColumnConfig<T>) => void;
-  onColumnDelete?: (columnId: string) => void; // <-- Add onColumnDelete prop
+  onColumnDelete?: (columnId: string) => void;
+  width?: number; // Keep width prop
+  onResizeStart: (columnId: string, startX: number) => void;
+  tableHeight?: number;
+  isCurrentlyResizing?: boolean; // Add prop to indicate if this column is being resized
 }
 
 export function DraggableTableHeader<T>({
@@ -46,11 +51,13 @@ export function DraggableTableHeader<T>({
   isSortable,
   currentDirection,
   handleSort,
-  onResizeStart,
-  width,
   classNames,
   onColumnChange,
-  onColumnDelete, // <-- Destructure prop
+  onColumnDelete,
+  width,
+  onResizeStart,
+  tableHeight,
+  isCurrentlyResizing, // Add to destructuring
 }: DraggableTableHeaderProps<T>) {
   const {
     attributes,
@@ -68,7 +75,6 @@ export function DraggableTableHeader<T>({
 
   const handleMouseDown = (event: React.MouseEvent) => {
     if (!column.isResizable) return;
-    // Prevent dnd starting if clicking resizer
     event.preventDefault();
     event.stopPropagation();
     onResizeStart(column.id, event.clientX);
@@ -84,7 +90,7 @@ export function DraggableTableHeader<T>({
     transition,
     opacity: isDragging ? 0.5 : 1,
     position: "relative", // Needed for absolute positioning of handle
-    width: width ? `${width}px` : undefined, // Apply width from state
+    width: width ? `${width}px` : undefined, // Apply width from prop
     minWidth: column.minWidth ? `${column.minWidth}px` : undefined,
     maxWidth: column.maxWidth ? `${column.maxWidth}px` : undefined,
     // cursor and touchAction handled by elements inside
@@ -110,7 +116,7 @@ export function DraggableTableHeader<T>({
       {...attributes}
       className={cn("group relative bg-zinc-100", classNames?.cell)}
     >
-      {/* Dialog for Editing Column (replaces Popover) */}
+      {/* Dialog for Editing Column */}
       <Dialog open={isEditingColumn} onOpenChange={setIsEditingColumn}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -123,18 +129,19 @@ export function DraggableTableHeader<T>({
         </DialogContent>
       </Dialog>
 
+      {/* Original Content Structure */}
       <div className="flex items-center h-full justify-between">
         {/* Left side: Drag Handle + Content + Sort */}
         <div className="flex items-center flex-grow overflow-hidden mr-1">
           {column.isDraggable && (
             <span
-              {...dndListeners} // dnd listeners ONLY on the handle
+              {...dndListeners}
               className={cn(
                 "p-1 cursor-grab touch-none mr-1 self-stretch flex items-center",
                 classNames?.dragHandle
               )}
               aria-label="Drag to reorder column"
-              onMouseDown={stopPropagation} // Prevent text selection/drag conflict
+              onMouseDown={stopPropagation}
               onTouchStart={stopPropagation}
             >
               <GripVertical className="h-4 w-4 text-muted-foreground/70" />
@@ -152,21 +159,19 @@ export function DraggableTableHeader<T>({
                 {...(!column.isDraggable ? dndListeners : {})}
               >
                 {column.icon ? <div className="mr-1">{column.icon}</div> : null}
-                {/* Header Content */}
                 <span className="truncate">{column.header}</span>
-                {/* Sort Icon */}
-                <div className="ml-auto  cursor-pointer flex flex-col ">
+                <div className="ml-auto cursor-pointer flex flex-col">
                   <ChevronUp
                     size={8}
                     className={cn(
-                      " text-zinc-500",
+                      "text-zinc-500",
                       currentDirection === "asc" && "text-zinc-800"
                     )}
                   />
                   <ChevronDown
                     size={8}
                     className={cn(
-                      " text-zinc-500",
+                      "text-zinc-500",
                       currentDirection === "desc" && "text-zinc-800"
                     )}
                   />
@@ -198,7 +203,7 @@ export function DraggableTableHeader<T>({
                     variant="ghost"
                     size="sm"
                     className="h-6 w-6 p-0"
-                    onMouseDown={stopPropagation} // Prevent drag/sort activation
+                    onMouseDown={stopPropagation}
                     onTouchStart={stopPropagation}
                     aria-label="Column actions"
                   >
@@ -227,13 +232,17 @@ export function DraggableTableHeader<T>({
               </DropdownMenu>
             )}
 
-          {/* Resize Handle (conditionally rendered outside dropdown) */}
+          {/* Add back the Resize Handle div */}
           {column.isResizable && (
             <div
-              onMouseDown={handleMouseDown}
+              style={{
+                height: tableHeight ? `${tableHeight}px` : "100%",
+              }}
+              onMouseDown={handleMouseDown} // Attach the handler here
               className={cn(
-                `absolute top-0 bottom-0 -right-1 w-0.5 cursor-col-resize group-hover:bg-zinc-500 select-none touch-none z-10`,
-                classNames?.resizeHandle
+                `absolute top-0 bottom-0 -right-[2px] w-[2px] cursor-col-resize group-hover:bg-blue-500 select-none touch-none z-10`,
+                classNames?.resizeHandle,
+                isCurrentlyResizing && "bg-blue-500"
               )}
               aria-label="Resize column"
             />

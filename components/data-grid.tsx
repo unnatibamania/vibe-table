@@ -6,22 +6,7 @@ import type {
   ColumnConfig,
   CellValue /*, ColumnType*/,
 } from "@/app/types/column"; // Import CellValue // Removed ColumnType
-// import { TextCell } from "@/components/cells/text-cell"; // Corrected import path
-// import { NumberCell } from "@/components/cells/number-cell"; // Added NumberCell
-// import { BooleanCell } from "@/components/cells/boolean-cell"; // Import BooleanCell
-// import { DateCell } from "@/components/cells/date-cell"; // Import DateCell
-// import { SelectCell } from "@/components/cells/select-cell"; // Import SelectCell
-// import { MultiSelectCell } from "@/components/cells/multi-select-cell"; // Import MultiSelectCell
-// import { ToggleCell } from "@/components/cells/toggle-cell"; // Import ToggleCell
-// import { RatingCell } from "@/components/cells/rating-cell"; // Import RatingCell
-// import { Button } from "@/components/ui/button"; // Removed unused import
-// import {
-//   ChevronUp,
-//   ChevronDown,
-//   ChevronsUpDown,
-//   GripVertical,
-//   MoreVertical,
-// } from "lucide-react"; // Removed unused imports
+
 // --- dnd-kit imports ---
 import {
   DndContext,
@@ -52,6 +37,25 @@ import { cn } from "@/lib/utils"; // Need cn for merging classes
 import { DraggableTableHeader } from "./data-grid/draggable-table-header"; // <-- Import DraggableTableHeader
 import type { DataGridClassNames, SortDirection } from "./data-grid/types"; // <-- Import types
 import { DataGridBody } from "./data-grid/data-grid-body"; // <-- Import DataGridBody
+
+// Helper function for throttling with requestAnimationFrame
+// Specify generic arguments for the function type T
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function throttleWithRAF<Args extends any[], Result>(
+  fn: (...args: Args) => Result
+): (...args: Args) => void {
+  let rafId: number | null = null;
+  return (...args: Args) => {
+    // Use Args here
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+    }
+    rafId = requestAnimationFrame(() => {
+      fn(...args);
+      rafId = null; // Allow next call
+    });
+  };
+}
 
 // Define the props for the DataGrid component
 interface DataGridProps<
@@ -130,6 +134,15 @@ export function DataGrid<
   const [selectedRowIds, setSelectedRowIds] = React.useState<
     Set<string | number>
   >(new Set());
+
+  const [columnWidths, setColumnWidths] = React.useState<
+    Record<string, number>
+  >(() =>
+    initialColumns.reduce((acc, col) => {
+      acc[col.id] = col.minWidth || 100;
+      return acc;
+    }, {} as Record<string, number>)
+  );
 
   // --- Notify parent on selection change ---
   React.useEffect(() => {
@@ -316,78 +329,84 @@ export function DataGrid<
   // --- End Row Selection Logic ---
 
   // --- Column Width State ---
-  const [columnWidths, setColumnWidths] = React.useState<
-    Record<string, number>
-  >({});
+
+  const tableRef = React.useRef<HTMLTableElement>(null);
+
+  // Add back resizingColumn state
   const [resizingColumn, setResizingColumn] = React.useState<{
     id: string;
     startX: number;
     startWidth: number;
   } | null>(null);
-  const tableRef = React.useRef<HTMLTableElement>(null);
 
-  // --- Resize Handlers ---
+  console.log("[ColumnWidths]", columnWidths);
+
+  // --- Add back Resize Handlers ---
   const handleResizeStart = React.useCallback(
     (columnId: string, startX: number) => {
-      console.log("[ResizeStart]", { columnId, startX });
+      // console.log("[ResizeStart]", { columnId, startX });
       const initialCol = initialColumns.find((c) => c.id === columnId);
-      // Get width from state, fallback to minWidth or default
-      const startWidth = columnWidths[columnId] || initialCol?.minWidth || 150;
-      console.log("[ResizeStart] Setting state:", {
-        id: columnId,
-        startX,
-        startWidth,
-      });
+      const startWidth = columnWidths[columnId] || initialCol?.minWidth || 150; // Use state width first
+      // console.log("[ResizeStart] Setting state:", { id: columnId, startX, startWidth });
       setResizingColumn({ id: columnId, startX, startWidth: startWidth });
     },
-    [columnWidths, initialColumns]
+    [columnWidths, initialColumns] // Dependencies
   );
 
-  const handleMouseMove = React.useCallback(
+  const latestMouseEventRef = React.useRef<MouseEvent | null>(null);
+
+  const performResize = React.useCallback(() => {
+    if (!resizingColumn || !tableRef.current || !latestMouseEventRef.current) {
+      return;
+    }
+    const event = latestMouseEventRef.current;
+    const dx = event.clientX - resizingColumn.startX;
+    let newWidth = resizingColumn.startWidth + dx;
+
+    const columnConfig = initialColumns.find((c) => c.id === resizingColumn.id);
+    const minWidth = columnConfig?.minWidth ?? 50; // Ensure a minimum width
+    newWidth = Math.max(newWidth, minWidth);
+    if (columnConfig?.maxWidth) {
+      newWidth = Math.min(newWidth, columnConfig.maxWidth);
+    }
+
+    // Use setColumnWidths here - this was the missing link!
+    setColumnWidths((prev) => ({ ...prev, [resizingColumn.id]: newWidth }));
+  }, [resizingColumn, initialColumns, setColumnWidths]); // Add setColumnWidths dependency
+
+  const throttledPerformResize = React.useMemo(
+    () => throttleWithRAF(performResize),
+    [performResize]
+  );
+
+  const handleRawMouseMove = React.useCallback(
     (event: MouseEvent) => {
-      if (!resizingColumn || !tableRef.current) return;
-      console.log("[ResizeMove] Event ClientX:", event.clientX);
-
-      const dx = event.clientX - resizingColumn.startX;
-      let newWidth = resizingColumn.startWidth + dx;
-      console.log("[ResizeMove] dx:", dx, "Raw newWidth:", newWidth);
-
-      // Apply constraints (min/max width from column config)
-      const columnConfig = initialColumns.find(
-        (c) => c.id === resizingColumn.id
-      );
-      if (columnConfig?.minWidth) {
-        newWidth = Math.max(newWidth, columnConfig.minWidth);
-      }
-      if (columnConfig?.maxWidth) {
-        newWidth = Math.min(newWidth, columnConfig.maxWidth);
-      }
-      console.log("[ResizeMove] Constrained newWidth:", newWidth);
-
-      setColumnWidths((prev) => ({ ...prev, [resizingColumn.id]: newWidth }));
+      if (!resizingColumn) return;
+      latestMouseEventRef.current = event;
+      throttledPerformResize();
     },
-    [resizingColumn, initialColumns]
+    [resizingColumn, throttledPerformResize]
   );
 
   const handleMouseUp = React.useCallback(() => {
     if (!resizingColumn) return;
-    console.log("[ResizeEnd] Resizing finished for:", resizingColumn.id);
-    // Optional: Could trigger a callback here (onColumnResize)
+    // console.log("[ResizeEnd]", resizingColumn.id);
+    latestMouseEventRef.current = null;
     setResizingColumn(null);
   }, [resizingColumn]);
 
-  // Add/Remove global listeners for mouse move/up during resize
+  // Add back useEffect for listeners
   React.useEffect(() => {
     if (!resizingColumn) return;
 
-    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mousemove", handleRawMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
 
     return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mousemove", handleRawMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [resizingColumn, handleMouseMove, handleMouseUp]);
+  }, [resizingColumn, handleRawMouseMove, handleMouseUp]);
 
   // Type assertion needed when passing handler down
   const typedOnColumnChange = onColumnChange as (
@@ -421,7 +440,10 @@ export function DataGrid<
         <Table
           ref={tableRef}
           suppressHydrationWarning
-          className={cn("w-full border-collapse", classNames?.table)}
+          style={{
+            tableLayout: "fixed",
+          }}
+          className={cn("border-collapse", classNames?.table)}
         >
           <TableHeader className={cn(classNames?.header?.wrapper)}>
             <SortableContext
@@ -464,15 +486,18 @@ export function DataGrid<
                   return (
                     <DraggableTableHeader
                       key={column.id}
-                      column={column as ColumnConfig<T>}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      column={column as ColumnConfig<any>}
+                      tableHeight={tableRef.current?.clientHeight}
                       isSortable={isSortable}
                       currentDirection={currentDirection}
                       handleSort={handleSort}
                       onResizeStart={handleResizeStart}
+                      isCurrentlyResizing={resizingColumn?.id === column.id}
                       width={columnWidths[column.id]}
                       classNames={classNames?.header}
                       onColumnChange={typedOnColumnChange}
-                      onColumnDelete={handleColumnDelete} // <-- Pass handler
+                      onColumnDelete={handleColumnDelete}
                     />
                   );
                 })}
