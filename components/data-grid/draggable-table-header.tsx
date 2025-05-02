@@ -1,22 +1,12 @@
 import * as React from "react";
 import { TableHead } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import {
-  ChevronUp,
-  ChevronDown,
-  GripVertical,
-  MoreVertical,
-} from "lucide-react";
+import { ChevronUp, ChevronDown, GripVertical } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
+import { ColumnActionsMenu } from "./column-actions-menu";
 import {
   Dialog,
   DialogContent,
@@ -42,6 +32,8 @@ interface DraggableTableHeaderProps<T> {
   width?: number; // Keep width prop
   onResizeStart: (columnId: string, startX: number) => void;
   tableHeight?: number;
+  pinnedColumns: Record<string, boolean>;
+  setPinnedColumns: (pinnedColumns: Record<string, boolean>) => void;
   isCurrentlyResizing?: boolean; // Add prop to indicate if this column is being resized
 }
 
@@ -58,6 +50,8 @@ export function DraggableTableHeader<T>({
   onResizeStart,
   tableHeight,
   isCurrentlyResizing, // Add to destructuring
+  pinnedColumns,
+  setPinnedColumns,
 }: DraggableTableHeaderProps<T>) {
   const {
     attributes,
@@ -195,42 +189,15 @@ export function DraggableTableHeader<T>({
         {/* Right side: Actions Menu + Resize Handle */}
         <div className="flex items-center flex-shrink-0 ml-1 space-x-1">
           {/* Actions Dropdown Menu */}
-          {(column.isEditable || column.isDeletable) &&
-            (onColumnChange || onColumnDelete) && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0"
-                    onMouseDown={stopPropagation}
-                    onTouchStart={stopPropagation}
-                    aria-label="Column actions"
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {column.isEditable && onColumnChange && (
-                    <DropdownMenuItem onSelect={() => setIsEditingColumn(true)}>
-                      Edit
-                    </DropdownMenuItem>
-                  )}
-                  {column.isEditable &&
-                    onColumnChange &&
-                    column.isDeletable &&
-                    onColumnDelete && <DropdownMenuSeparator />}
-                  {column.isDeletable && onColumnDelete && (
-                    <DropdownMenuItem
-                      onSelect={() => onColumnDelete(column.id)}
-                      className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                    >
-                      Delete
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+          <ColumnActionsMenu
+            column={column}
+            onColumnChange={onColumnChange}
+            onColumnDelete={onColumnDelete}
+            setIsEditingColumn={setIsEditingColumn}
+            pinnedColumns={pinnedColumns}
+            setPinnedColumns={setPinnedColumns}
+            stopPropagation={stopPropagation}
+          />
 
           {/* Add back the Resize Handle div */}
           {column.isResizable && (
