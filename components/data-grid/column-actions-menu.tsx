@@ -30,17 +30,21 @@ export function ColumnActionsMenu<T>({
   stopPropagation,
 }: ColumnActionsMenuProps<T>) {
   // Only render if there are actions available
-  if (
-    !(
-      (
-        (column.isEditable && onColumnChange) ||
-        (column.isDeletable && onColumnDelete) ||
-        setPinnedColumns
-      ) // Always show pin/unpin if setter is provided
-    )
-  ) {
-    return null;
-  }
+
+  //   if (
+  //     !(
+  //       (
+  //         (column.isEditable && onColumnChange) ||
+  //         (column.isDeletable && onColumnDelete)
+  //       ) // Always show pin/unpin if setter is provided
+  //     )
+  //   ) {
+  //     return null;
+  //   }
+
+  console.log({ pinnedColumns });
+
+  if (!column.isEditable || !column.isDeletable) return null;
 
   return (
     <DropdownMenu>
@@ -85,7 +89,7 @@ export function ColumnActionsMenu<T>({
             })
           }
         >
-          {pinnedColumns[column.id] ? "Unpin" : "Pin"}
+          {pinnedColumns?.[column.id] ? "Unpin" : "Pin"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

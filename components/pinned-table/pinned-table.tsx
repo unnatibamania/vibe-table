@@ -1,4 +1,5 @@
 import * as React from "react";
+import { motion } from "framer-motion";
 import { ColumnConfig, CellValue } from "@/app/types/column";
 import { cn } from "@/lib/utils";
 import {
@@ -27,6 +28,10 @@ import {
 } from "@/components/ui/dialog";
 import { EditColumnForm } from "../data-grid/edit-column-form";
 import { ColumnActionsMenu } from "../data-grid/column-actions-menu";
+
+// Create motion components
+const MotionTableHead = motion(TableHead);
+const MotionTableCell = motion(TableCell);
 
 interface PinnedTableProps<
   T extends { id: string | number; [key: string]: CellValue }
@@ -66,11 +71,17 @@ export function PinnedTable<
   }, 0);
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, x: -50 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -50 }}
+      transition={{ duration: 0.3 }}
+      layout
       className="absolute top-0 z-30 left-0 h-full bg-background shadow-md overflow-hidden"
       style={{ width: `${totalPinnedWidth}px` }}
     >
       <Table
+        suppressHydrationWarning
         className={cn(
           "border-collapse shadow-md table-fixed",
           classNames?.table
@@ -87,7 +98,12 @@ export function PinnedTable<
             {pinnedColumns.map((column) => {
               const width = columnWidths[column.id] || column.minWidth || 150;
               return (
-                <TableHead
+                <MotionTableHead
+                  layout="position"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
                   style={{
                     width: `${width}px`,
                     minWidth: `${column.minWidth || 0}px`,
@@ -115,7 +131,7 @@ export function PinnedTable<
                       />
                     </div>
                   </div>
-                </TableHead>
+                </MotionTableHead>
               );
             })}
           </TableRow>
@@ -128,7 +144,7 @@ export function PinnedTable<
                 key={row.id}
                 data-state={isSelected ? "selected" : ""}
                 className={cn(
-                  "h-[53px] ",
+                  "h-[53px] transition-all duration-300",
                   classNames?.body?.row,
                   isSelected && classNames?.body?.selectedRow
                 )}
@@ -147,7 +163,12 @@ export function PinnedTable<
                       : undefined,
                   };
                   return (
-                    <TableCell
+                    <MotionTableCell
+                      layout="position"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2, delay: 0.05 }}
                       key={column.id}
                       style={cellStyle}
                       className={cn(
@@ -257,7 +278,7 @@ export function PinnedTable<
                       ) : (
                         column.cell(row)
                       )}
-                    </TableCell>
+                    </MotionTableCell>
                   );
                 })}
               </TableRow>
@@ -293,6 +314,6 @@ export function PinnedTable<
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </motion.div>
   );
 }

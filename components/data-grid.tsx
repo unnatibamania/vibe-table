@@ -449,6 +449,8 @@ export function DataGrid<
             columnWidths={columnWidths}
             handleSave={handleSave}
             selectedRowIds={selectedRowIds}
+            pinnedColumnsState={pinnedColumns}
+            setPinnedColumns={setPinnedColumns}
             // Pass other needed props if PinnedTable cells become interactive
           />
         )}
