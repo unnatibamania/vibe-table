@@ -322,7 +322,7 @@ export function DataGrid<
   const numSelected = selectedRowIds.size;
   const isAllSelected = numRows > 0 && numSelected === numRows;
   const isIndeterminate = numSelected > 0 && numSelected < numRows;
-  const headerCheckboxState = isAllSelected
+  const headerCheckboxState: boolean | "indeterminate" = isAllSelected
     ? true
     : isIndeterminate
     ? "indeterminate"

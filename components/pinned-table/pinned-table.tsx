@@ -49,7 +49,7 @@ interface PinnedTableProps<
   enableRowSelection: boolean;
   pinnedColumnsState: Record<string, boolean>;
   setPinnedColumns: (pinnedColumns: Record<string, boolean>) => void;
-  headerCheckboxState: boolean;
+  headerCheckboxState: boolean | "indeterminate";
   handleSelectRow: (
     rowId: string | number,
     checked: boolean | "indeterminate"
