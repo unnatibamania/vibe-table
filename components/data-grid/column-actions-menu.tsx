@@ -6,7 +6,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { ColumnConfig } from "@/app/types/column"; // Assuming original path
@@ -23,7 +22,6 @@ interface ColumnActionsMenuProps<T> {
 
 export function ColumnActionsMenu<T>({
   column,
-  onColumnChange,
   onColumnDelete,
   setIsEditingColumn,
   pinnedColumns,
@@ -31,8 +29,6 @@ export function ColumnActionsMenu<T>({
   stopPropagation,
 }: ColumnActionsMenuProps<T>) {
   // Only render if there are actions available
-
-  console.log({ pinnedColumns });
 
   if (!column.isEditable || !column.isDeletable) return null;
 
@@ -42,7 +38,7 @@ export function ColumnActionsMenu<T>({
         <Button
           variant="ghost"
           size="sm"
-          className="h-6 w-6 p-0"
+          className="h-6 w-6 cursor-pointer p-0"
           onMouseDown={stopPropagation} // Prevent drag/sort activation
           onTouchStart={stopPropagation}
           aria-label="Column actions"
@@ -51,27 +47,27 @@ export function ColumnActionsMenu<T>({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {column.isEditable && onColumnChange && (
-          <DropdownMenuItem onSelect={() => setIsEditingColumn(true)}>
+        {column.isEditable && (
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onSelect={() => setIsEditingColumn(true)}
+          >
             Edit
           </DropdownMenuItem>
         )}
-        {column.isEditable &&
-          onColumnChange &&
-          column.isDeletable &&
-          onColumnDelete && <DropdownMenuSeparator />}
-        {column.isDeletable && onColumnDelete && (
+
+        {column.isDeletable && (
           <DropdownMenuItem
-            onSelect={() => onColumnDelete(column.id)}
-            className="text-destructive focus:text-destructive focus:bg-destructive/10"
+            className="cursor-pointer"
+            onSelect={() => onColumnDelete?.(column.id)}
           >
             Delete
           </DropdownMenuItem>
         )}
         {/* Separator before Pin/Unpin if Edit or Delete are present */}
-        {((column.isEditable && onColumnChange) ||
-          (column.isDeletable && onColumnDelete)) && <DropdownMenuSeparator />}
+
         <DropdownMenuItem
+          className="cursor-pointer"
           onSelect={() =>
             setPinnedColumns({
               ...pinnedColumns,
