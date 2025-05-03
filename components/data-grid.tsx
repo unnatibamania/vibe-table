@@ -424,6 +424,23 @@ export function DataGrid<
     };
   }, [resizingColumn, handleRawMouseMove, handleMouseUp]);
 
+  // --- Effect to change global cursor during resize ---
+  React.useEffect(() => {
+    if (resizingColumn) {
+      // Set global cursor to indicate resizing
+      document.body.style.cursor = "col-resize";
+
+      // Return cleanup function to reset cursor when resizing stops or component unmounts
+      return () => {
+        document.body.style.cursor = "";
+      };
+    }
+    // If resizingColumn is null, ensure cursor is reset (might be redundant but safe)
+    document.body.style.cursor = "";
+    // No cleanup needed if not resizing initially
+    return undefined;
+  }, [resizingColumn]); // Re-run this effect only when resizingColumn changes
+
   // Type assertion needed when passing handler down
   const typedOnColumnChange = onColumnChange as (
     updatedColumn: ColumnConfig<T>
