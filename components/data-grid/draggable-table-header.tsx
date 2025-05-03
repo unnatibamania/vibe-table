@@ -5,6 +5,7 @@ import { ChevronUp, ChevronDown, GripVertical } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
+import type { RowAction } from "@/app/types/column";
 
 import { ColumnActionsMenu } from "./column-actions-menu";
 import {
@@ -35,6 +36,7 @@ interface DraggableTableHeaderProps<T> {
   pinnedColumns: Record<string, boolean>;
   setPinnedColumns: (pinnedColumns: Record<string, boolean>) => void;
   isCurrentlyResizing?: boolean; // Add prop to indicate if this column is being resized
+  rowActions?: RowAction<T>[];
 }
 
 export function DraggableTableHeader<T>({

@@ -59,3 +59,11 @@ export type ColumnConfig<T> =
       selectOptions?: never;
       multiSelectOptions?: never;
     });
+
+// Define the type for row actions (added here)
+export interface RowAction<T> {
+  label: string;
+  icon?: React.ReactNode;
+  value: string; // Unique value for key prop
+  onClick: (row: T) => void;
+}

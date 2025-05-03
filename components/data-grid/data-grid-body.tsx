@@ -2,7 +2,7 @@ import * as React from "react";
 import { TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import type { ColumnConfig, CellValue } from "@/app/types/column";
+import type { ColumnConfig, CellValue, RowAction } from "@/app/types/column";
 import type { DataGridClassNames } from "./types";
 // Import specific cell components as needed
 import { TextCell } from "@/components/cells/text-cell";
@@ -13,6 +13,14 @@ import { SelectCell } from "@/components/cells/select-cell";
 import { MultiSelectCell } from "@/components/cells/multi-select-cell";
 import { ToggleCell } from "@/components/cells/toggle-cell";
 import { RatingCell } from "@/components/cells/rating-cell";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 // Define the props for DataGridBody
 interface DataGridBodyProps<
@@ -32,6 +40,7 @@ interface DataGridBodyProps<
   isLoading?: boolean;
   skeletonComponent?: React.ReactNode;
   pinnedColumnsData: ColumnConfig<T>[];
+  rowActions?: RowAction<T>[];
 }
 
 export function DataGridBody<
@@ -48,6 +57,7 @@ export function DataGridBody<
   isLoading,
   skeletonComponent,
   pinnedColumnsData,
+  rowActions,
 }: DataGridBodyProps<T>) {
   // Row rendering logic will go here
   return (
@@ -57,7 +67,6 @@ export function DataGridBody<
         : rows.map((row, rowIndex) => {
             const isSelected = selectedRowIds.has(row.id);
             return (
-              // Add visual indication for selected rows
               <TableRow
                 key={row.id}
                 data-state={isSelected ? "selected" : ""}
@@ -211,6 +220,48 @@ export function DataGridBody<
                     </TableCell>
                   );
                 })}
+
+                {/* Actions Column Cell (conditionally rendered) */}
+                {rowActions && rowActions.length > 0 && (
+                  <TableCell
+                    key="__actions_cell__"
+                    style={{ width: "50px" }}
+                    className={cn(
+                      "sticky right-0 z-10 bg-zinc-50/50 p-0",
+                      classNames?.body?.cell
+                    )}
+                  >
+                    <div className="flex  h-full items-center justify-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                          >
+                            {/* <span className="sr-only">Open row actions</span> */}
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {rowActions.map((action) => (
+                            <DropdownMenuItem
+                              key={action.value}
+                              onSelect={() => action.onClick(row)}
+                            >
+                              {action.icon && (
+                                <span className="mr-2 h-4 w-4">
+                                  {action.icon}
+                                </span>
+                              )}
+                              {action.label}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             );
           })}

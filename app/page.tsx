@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { DataGrid } from "@/components/data-grid"; // Reverted to alias path
-import type { ColumnConfig, CellValue } from "@/app/types/column"; // Reverted to alias path
+import type { ColumnConfig, CellValue, RowAction } from "@/app/types/column"; // Reverted to alias path
 import { format, isValid } from "date-fns"; // Import format for cell display
 import { Button } from "@/components/ui/button"; // Import Button
 import {
@@ -592,6 +592,16 @@ export default function Home() {
   };
   // --- End Handler for Saving New Columns ---
 
+  const rowActions: RowAction<SampleRow>[] = [
+    {
+      label: "Delete",
+      value: "delete",
+      onClick: (row) => {
+        console.log("Deleting row:", row);
+      },
+    },
+  ];
+
   return (
     <div className="z-20 relative w-screen  h-screen ">
       <div
@@ -648,6 +658,7 @@ export default function Home() {
           onColumnChange={handleColumnChange}
           onColumnDelete={handleDeleteColumn} // Pass the delete handler
           classNames={{}}
+          rowActions={rowActions}
         />
 
         <div className="flex items-center gap-3 justify-start mt-4">

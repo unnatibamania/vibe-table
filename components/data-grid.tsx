@@ -28,6 +28,7 @@ import { PinnedTable } from "@/components/pinned-table/pinned-table";
 // import { CSS } from "@dnd-kit/utilities"; // Removed unused import
 import { Checkbox } from "@/components/ui/checkbox"; // Import Checkbox
 import { cn } from "@/lib/utils"; // Need cn for merging classes
+import { MoreHorizontal } from "lucide-react";
 // import {
 //   DropdownMenu,
 //   DropdownMenuContent,
@@ -38,6 +39,9 @@ import { cn } from "@/lib/utils"; // Need cn for merging classes
 import { DraggableTableHeader } from "./data-grid/draggable-table-header"; // <-- Import DraggableTableHeader
 import type { DataGridClassNames, SortDirection } from "./data-grid/types"; // <-- Import types
 import { DataGridBody } from "./data-grid/data-grid-body"; // <-- Import DataGridBody
+
+// Import RowAction type
+import type { RowAction } from "@/app/types/column";
 
 // Helper function for throttling with requestAnimationFrame
 // Specify generic arguments for the function type T
@@ -75,6 +79,7 @@ interface DataGridProps<
   onColumnDelete?: (columnId: string) => void; // <-- Add onColumnDelete prop
   isLoading?: boolean; // <-- Add isLoading prop
   skeletonComponent?: React.ReactNode; // <-- Add skeletonComponent prop
+  rowActions?: RowAction<T>[]; // Prop for row actions menu items
 }
 
 // The main DataGrid component
@@ -94,6 +99,7 @@ export function DataGrid<
   onColumnDelete, // <-- Destructure prop,
   isLoading,
   skeletonComponent,
+  rowActions,
 }: DataGridProps<T>) {
   // --- Sorting State ---
   const [sortColumnId, setSortColumnId] = React.useState<string | null>(null);
@@ -560,6 +566,22 @@ export function DataGrid<
                       />
                     );
                   })}
+                  {/* Actions Column Header (conditionally rendered) */}
+                  {rowActions && rowActions.length > 0 && (
+                    <TableHead
+                      key="__actions_column__"
+                      style={{ width: "50px", minWidth: "50px" }} // Fixed width, adjust as needed
+                      className={cn(
+                        "sticky right-0 z-10 bg-muted p-0", // Stick to right if needed, adjust bg
+                        classNames?.header?.cell
+                      )}
+                    >
+                      {/* Header content - could be an icon or empty */}
+                      <div className="flex h-full items-center justify-center">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </div>
+                    </TableHead>
+                  )}
                 </TableRow>
               </SortableContext>
             </TableHeader>
@@ -574,6 +596,7 @@ export function DataGrid<
               enableRowSelection={enableRowSelection}
               classNames={classNames}
               isLoading={isLoading}
+              rowActions={rowActions}
               skeletonComponent={skeletonComponent}
             />
           </Table>
