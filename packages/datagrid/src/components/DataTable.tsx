@@ -1,8 +1,11 @@
+"use client";
+
 import React from "react";
 import { cn } from "../lib/cn";
 import { normalizeColumns } from "../lib/normalize-columns";
 import type { RowId } from "../types/table";
 import type { DataTableProps } from "../types/table";
+import { EditableCellRenderer } from "./cell-editors";
 import { DataTableCell } from "./DataTableCell";
 import { DataTableHeader } from "./DataTableHeader";
 import { DataTableRow } from "./DataTableRow";
@@ -11,18 +14,11 @@ function defaultSkeletonCell() {
   return <div className="h-4 w-full animate-pulse rounded bg-zinc-200" />;
 }
 
-function fallbackCellValue<T extends object>(
-  row: T,
-  columnId: string
-) {
-  const value = (row as Record<string, unknown>)[columnId];
-  return String(value ?? "");
-}
-
 export function DataTable<T extends object>({
   rows,
   columns,
   getRowId,
+  onCellChange,
   classNames,
   isLoading = false,
   loadingRowCount = 3,
@@ -109,9 +105,12 @@ export function DataTable<T extends object>({
                         maxWidth={column.maxWidth}
                         className={cn(classNames?.cell)}
                       >
-                        {column.cell
-                          ? column.cell(row)
-                          : fallbackCellValue(row, column.id)}
+                        <EditableCellRenderer
+                          row={row}
+                          rowId={rowId}
+                          column={column}
+                          onCellChange={onCellChange}
+                        />
                       </DataTableCell>
                     ))}
                   </DataTableRow>

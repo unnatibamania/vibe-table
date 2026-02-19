@@ -12,13 +12,11 @@ export interface DataTableProps<T extends object> {
   rows: T[];
   columns: DataTableColumn<T>[];
   getRowId?: (row: T, index: number) => RowId;
+  onCellChange?: (rowId: RowId, columnId: string, newValue: unknown) => void;
   classNames?: DataTableClassNames;
   isLoading?: boolean;
   loadingRowCount?: number;
   emptyState?: React.ReactNode;
-
-  // Step 2+: rich cell editors
-  // onCellChange?: (rowId: RowId, columnId: string, newValue: unknown) => void;
 
   // Step 3+: selection
   // enableRowSelection?: boolean;
@@ -57,8 +55,7 @@ export interface DataTableColumnProps
   maxWidth?: number;
 }
 
-export interface DataTableRowProps
-  extends React.HTMLAttributes<HTMLTableRowElement> {}
+export type DataTableRowProps = React.HTMLAttributes<HTMLTableRowElement>;
 
 export interface DataTableCellProps
   extends React.TdHTMLAttributes<HTMLTableCellElement> {

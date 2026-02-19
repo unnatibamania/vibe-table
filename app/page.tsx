@@ -1,22 +1,70 @@
+"use client";
+
+import * as React from "react";
 import { DataTable, type DataTableColumnConfig } from "@/packages/datagrid/src";
 
 const LIBRARY_TABLE_COLUMNS_IDS = {
   STATUS: "status",
   NAME: "name",
+  AGE: "age",
+  ACTIVE: "active",
+  FEATURED: "featured",
   UPDATED_AT: "updatedAt",
+  PRIORITY: "priority",
+  TAGS: "tags",
+  RATING: "rating",
 } as const;
 
 type DemoRow = {
   id: number;
-  name: string;
   status: string;
+  name: string;
+  age: number;
+  active: boolean;
+  featured: boolean;
   updatedAt: string;
+  priority: string;
+  tags: string[];
+  rating: number;
 };
 
-const rows: DemoRow[] = [
-  { id: 1, name: "Alpha", status: "Ready", updatedAt: "2026-02-19" },
-  { id: 2, name: "Beta", status: "In Review", updatedAt: "2026-02-18" },
-  { id: 3, name: "Gamma", status: "Draft", updatedAt: "2026-02-17" },
+const initialRows: DemoRow[] = [
+  {
+    id: 1,
+    status: "Ready",
+    name: "Alpha",
+    age: 29,
+    active: true,
+    featured: false,
+    updatedAt: "2026-02-19",
+    priority: "high",
+    tags: ["frontend"],
+    rating: 4,
+  },
+  {
+    id: 2,
+    status: "In Review",
+    name: "Beta",
+    age: 34,
+    active: false,
+    featured: true,
+    updatedAt: "2026-02-18",
+    priority: "medium",
+    tags: ["backend", "api"],
+    rating: 3,
+  },
+  {
+    id: 3,
+    status: "Draft",
+    name: "Gamma",
+    age: 25,
+    active: true,
+    featured: false,
+    updatedAt: "2026-02-17",
+    priority: "low",
+    tags: ["ops"],
+    rating: 2,
+  },
 ];
 
 const columns: DataTableColumnConfig<DemoRow>[] = [
@@ -29,8 +77,8 @@ const columns: DataTableColumnConfig<DemoRow>[] = [
         <span>Status</span>
       </div>
     ),
-    minWidth: 120,
-    maxWidth: 180,
+    minWidth: 140,
+    maxWidth: 190,
     isResizable: false,
     isHidden: false,
     isDraggable: false,
@@ -52,39 +100,102 @@ const columns: DataTableColumnConfig<DemoRow>[] = [
     id: LIBRARY_TABLE_COLUMNS_IDS.NAME,
     label: "Name",
     header: "Name",
-    minWidth: 180,
-    isResizable: false,
-    isHidden: false,
-    isDraggable: false,
-    isEditable: false,
-    isDeletable: false,
-    isSortable: false,
-    showColumnActions: false,
+    minWidth: 160,
+    isEditable: true,
     type: "text",
-    cell: (row) => row.name,
+  },
+  {
+    id: LIBRARY_TABLE_COLUMNS_IDS.AGE,
+    label: "Age",
+    header: "Age",
+    minWidth: 100,
+    isEditable: true,
+    type: "number",
+  },
+  {
+    id: LIBRARY_TABLE_COLUMNS_IDS.ACTIVE,
+    label: "Active",
+    header: "Active",
+    minWidth: 100,
+    isEditable: true,
+    type: "boolean",
+  },
+  {
+    id: LIBRARY_TABLE_COLUMNS_IDS.FEATURED,
+    label: "Featured",
+    header: "Featured",
+    minWidth: 120,
+    isEditable: true,
+    type: "toggle",
   },
   {
     id: LIBRARY_TABLE_COLUMNS_IDS.UPDATED_AT,
     label: "Updated",
     header: "Updated",
     minWidth: 140,
-    isResizable: false,
-    isHidden: false,
-    isDraggable: false,
-    isEditable: false,
-    isDeletable: false,
-    isSortable: false,
-    showColumnActions: false,
+    isEditable: true,
     type: "date",
-    cell: (row) => row.updatedAt,
+  },
+  {
+    id: LIBRARY_TABLE_COLUMNS_IDS.PRIORITY,
+    label: "Priority",
+    header: "Priority",
+    minWidth: 130,
+    isEditable: true,
+    type: "select",
+    selectOptions: [
+      { label: "Low", value: "low" },
+      { label: "Medium", value: "medium" },
+      { label: "High", value: "high" },
+    ],
+  },
+  {
+    id: LIBRARY_TABLE_COLUMNS_IDS.TAGS,
+    label: "Tags",
+    header: "Tags",
+    minWidth: 200,
+    isEditable: true,
+    type: "multi-select",
+    multiSelectOptions: [
+      { label: "Frontend", value: "frontend" },
+      { label: "Backend", value: "backend" },
+      { label: "API", value: "api" },
+      { label: "Ops", value: "ops" },
+    ],
+  },
+  {
+    id: LIBRARY_TABLE_COLUMNS_IDS.RATING,
+    label: "Rating",
+    header: "Rating",
+    minWidth: 170,
+    isEditable: true,
+    type: "rating",
+    maxRating: 5,
   },
 ];
 
 export default function Home() {
+  const [rows, setRows] = React.useState(initialRows);
+
+  const handleCellChange = React.useCallback(
+    (rowId: string | number, columnId: string, newValue: unknown) => {
+      setRows((currentRows) =>
+        currentRows.map((row) =>
+          row.id === rowId ? ({ ...row, [columnId]: newValue } as DemoRow) : row
+        )
+      );
+    },
+    []
+  );
+
   return (
-    <main className="mx-auto max-w-5xl p-8">
-      <h1 className="mb-4 text-2xl font-semibold">DataTable Step 1 Demo</h1>
-      <DataTable rows={rows} columns={columns} />
+    <main className="mx-auto max-w-7xl p-8">
+      <h1 className="mb-4 text-2xl font-semibold">DataTable Step 2 Demo</h1>
+      <p className="mb-6 text-sm text-zinc-600">
+        Editable cells are enabled for text, number, boolean, date, select,
+        multi-select, toggle, and rating types.
+      </p>
+      <DataTable rows={rows} columns={columns} onCellChange={handleCellChange} />
     </main>
   );
 }

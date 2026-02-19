@@ -1,6 +1,6 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import { DataTable } from "../DataTable";
 import type { DataTableColumn } from "../../types/column";
 
@@ -178,5 +178,27 @@ describe("DataTable", () => {
     const renderedRows = container.querySelectorAll("tbody tr[data-row-id]");
     expect(renderedRows[0]).toHaveAttribute("data-row-id", "row-a");
     expect(renderedRows[1]).toHaveAttribute("data-row-id", "row-b");
+  });
+
+  it("calls onCellChange for editable text cells", () => {
+    const onCellChange = vi.fn();
+    const columns: DataTableColumn<Row>[] = [
+      {
+        id: "name",
+        label: "Name",
+        header: "Name",
+        type: "text",
+        isEditable: true,
+      },
+    ];
+
+    render(<DataTable rows={rows} columns={columns} onCellChange={onCellChange} />);
+
+    fireEvent.doubleClick(screen.getByRole("button", { name: "Alice" }));
+    const input = screen.getByDisplayValue("Alice");
+    fireEvent.change(input, { target: { value: "Alicia" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(onCellChange).toHaveBeenCalledWith(1, "name", "Alicia");
   });
 });
