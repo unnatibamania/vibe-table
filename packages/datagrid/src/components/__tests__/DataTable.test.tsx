@@ -1,5 +1,6 @@
 import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { DataTable } from "../DataTable";
 import type { DataTableColumn } from "../../types/column";
@@ -284,5 +285,53 @@ describe("DataTable", () => {
       "aria-checked",
       "mixed"
     );
+  });
+
+  it("calls row action handlers from three-dot row menu", async () => {
+    const user = userEvent.setup();
+    const onRowAction = vi.fn();
+
+    render(
+      <DataTable
+        rows={rows}
+        columns={baseColumns}
+        rowActions={[
+          {
+            label: "Edit row",
+            value: "edit",
+            action: (row) => onRowAction(row.id),
+          },
+        ]}
+      />
+    );
+
+    await user.click(screen.getByTestId("row-actions-trigger-1"));
+    await user.click(await screen.findByText("Edit row"));
+
+    expect(onRowAction).toHaveBeenCalledWith(1);
+  });
+
+  it("calls column action handlers from three-dot column menu", async () => {
+    const user = userEvent.setup();
+    const onColumnAction = vi.fn();
+
+    render(
+      <DataTable
+        rows={rows}
+        columns={baseColumns}
+        columnActions={[
+          {
+            label: "Inspect column",
+            value: "inspect",
+            action: (column) => onColumnAction(column.id),
+          },
+        ]}
+      />
+    );
+
+    await user.click(screen.getByTestId("column-actions-trigger-name"));
+    await user.click(await screen.findByText("Inspect column"));
+
+    expect(onColumnAction).toHaveBeenCalledWith("name");
   });
 });

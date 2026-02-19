@@ -3,7 +3,9 @@
 import * as React from "react";
 import {
   DataTable,
+  type DataTableColumnAction,
   type DataTableColumnConfig,
+  type DataTableRowAction,
   type RowId,
 } from "@/packages/datagrid/src";
 
@@ -183,6 +185,7 @@ export default function Home() {
   const [selectedRowIds, setSelectedRowIds] = React.useState<Set<RowId>>(
     new Set()
   );
+  const [lastAction, setLastAction] = React.useState<string>("none");
 
   const handleCellChange = React.useCallback(
     (rowId: string | number, columnId: string, newValue: unknown) => {
@@ -192,6 +195,49 @@ export default function Home() {
         )
       );
     },
+    []
+  );
+
+  const rowActions = React.useMemo<DataTableRowAction<DemoRow>[]>(
+    () => [
+      {
+        label: "Mark as ready",
+        value: "mark_ready",
+        action: (row) => {
+          setRows((currentRows) =>
+            currentRows.map((item) =>
+              item.id === row.id ? { ...item, status: "Ready" } : item
+            )
+          );
+          setLastAction(`row:${row.id}:mark_ready`);
+        },
+      },
+      {
+        label: "Set high priority",
+        value: "set_high_priority",
+        action: (row) => {
+          setRows((currentRows) =>
+            currentRows.map((item) =>
+              item.id === row.id ? { ...item, priority: "high" } : item
+            )
+          );
+          setLastAction(`row:${row.id}:set_high_priority`);
+        },
+      },
+    ],
+    []
+  );
+
+  const columnActions = React.useMemo<DataTableColumnAction<DemoRow>[]>(
+    () => [
+      {
+        label: "Log column id",
+        value: "log_column",
+        action: (column) => {
+          setLastAction(`column:${column.id}:log_column`);
+        },
+      },
+    ],
     []
   );
 
@@ -205,6 +251,7 @@ export default function Home() {
       <p className="mb-4 text-sm text-zinc-600">
         Selected rows: {selectedRowIds.size}
       </p>
+      <p className="mb-4 text-sm text-zinc-600">Last action: {lastAction}</p>
       <DataTable
         rows={rows}
         columns={columns}
@@ -212,6 +259,8 @@ export default function Home() {
         enableRowSelection
         selectedRowIds={selectedRowIds}
         onSelectionChange={setSelectedRowIds}
+        rowActions={rowActions}
+        columnActions={columnActions}
       />
     </main>
   );

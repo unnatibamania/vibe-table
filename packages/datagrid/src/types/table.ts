@@ -25,8 +25,8 @@ export interface DataTableProps<T extends object> {
   onSelectionChange?: (selectedIds: Set<RowId>) => void;
 
   // Step 4+: actions
-  // rowActions?: DataTableRowAction<T>[];
-  // columnActions?: DataTableColumnAction<T>[];
+  rowActions?: DataTableRowAction<T>[];
+  columnActions?: DataTableColumnAction<T>[];
 
   // Step 5+: draggable columns
   // onColumnOrderChange?: (columnIds: string[]) => void;
@@ -53,6 +53,8 @@ export interface DataTableHeaderProps<T extends object> {
   enableRowSelection?: boolean;
   headerSelectionState?: boolean | "indeterminate";
   onToggleSelectAll?: (checked: boolean | "indeterminate") => void;
+  showRowActionsColumn?: boolean;
+  columnActions?: DataTableColumnAction<T>[];
 }
 
 export interface DataTableColumnProps

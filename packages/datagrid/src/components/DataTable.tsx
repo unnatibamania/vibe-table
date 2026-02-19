@@ -9,6 +9,7 @@ import { EditableCellRenderer } from "./cell-editors";
 import { DataTableCell } from "./DataTableCell";
 import { DataTableHeader } from "./DataTableHeader";
 import { DataTableRow } from "./DataTableRow";
+import { RowActionsMenu } from "./row-actions-menu";
 import { Checkbox } from "./ui/checkbox";
 
 function defaultSkeletonCell() {
@@ -24,6 +25,8 @@ export function DataTable<T extends object>({
   selectedRowIds,
   defaultSelectedRowIds,
   onSelectionChange,
+  rowActions = [],
+  columnActions = [],
   classNames,
   isLoading = false,
   loadingRowCount = 3,
@@ -146,7 +149,9 @@ export function DataTable<T extends object>({
   }, [enableRowSelection, effectiveSelectedRowIds, resolvedRowIds]);
 
   const resolvedColumnCount = Math.max(
-    visibleColumns.length + (enableRowSelection ? 1 : 0),
+    visibleColumns.length +
+      (enableRowSelection ? 1 : 0) +
+      (rowActions.length > 0 ? 1 : 0),
     1
   );
 
@@ -159,6 +164,8 @@ export function DataTable<T extends object>({
           enableRowSelection={enableRowSelection}
           headerSelectionState={headerSelectionState}
           onToggleSelectAll={handleToggleSelectAll}
+          showRowActionsColumn={rowActions.length > 0}
+          columnActions={columnActions}
         />
 
         <tbody className={cn(classNames?.tbody)}>
@@ -183,6 +190,11 @@ export function DataTable<T extends object>({
                       {column.skeleton ?? defaultSkeletonCell()}
                     </DataTableCell>
                   ))}
+                  {rowActions.length > 0 ? (
+                    <DataTableCell className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}>
+                      <div className="h-4 w-4 animate-pulse rounded bg-zinc-200" />
+                    </DataTableCell>
+                  ) : null}
                 </DataTableRow>
               ))
             : null}
@@ -237,6 +249,13 @@ export function DataTable<T extends object>({
                         />
                       </DataTableCell>
                     ))}
+                    {rowActions.length > 0 ? (
+                      <DataTableCell className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}>
+                        <div className="flex items-center justify-center">
+                          <RowActionsMenu row={row} rowId={rowId} actions={rowActions} />
+                        </div>
+                      </DataTableCell>
+                    ) : null}
                   </DataTableRow>
                 );
               })
