@@ -201,4 +201,88 @@ describe("DataTable", () => {
 
     expect(onCellChange).toHaveBeenCalledWith(1, "name", "Alicia");
   });
+
+  it("supports uncontrolled row selection with row and header checkboxes", () => {
+    const onSelectionChange = vi.fn();
+
+    render(
+      <DataTable
+        rows={rows}
+        columns={baseColumns}
+        enableRowSelection
+        onSelectionChange={onSelectionChange}
+      />
+    );
+
+    const selectAll = screen.getByLabelText("Select all rows");
+    const selectRow1 = screen.getByLabelText("Select row 1");
+    const selectRow2 = screen.getByLabelText("Select row 2");
+
+    expect(selectAll).toHaveAttribute("aria-checked", "false");
+    expect(selectRow1).toHaveAttribute("aria-checked", "false");
+    expect(selectRow2).toHaveAttribute("aria-checked", "false");
+
+    fireEvent.click(selectRow1);
+    expect(selectRow1).toHaveAttribute("aria-checked", "true");
+    expect(selectAll).toHaveAttribute("aria-checked", "mixed");
+
+    const firstSelection = onSelectionChange.mock.calls[0][0] as Set<number>;
+    expect(Array.from(firstSelection)).toEqual([1]);
+
+    fireEvent.click(selectAll);
+    expect(selectRow1).toHaveAttribute("aria-checked", "true");
+    expect(selectRow2).toHaveAttribute("aria-checked", "true");
+
+    const secondSelection = onSelectionChange.mock.calls[1][0] as Set<number>;
+    expect(Array.from(secondSelection)).toEqual([1, 2]);
+  });
+
+  it("supports controlled row selection", () => {
+    const onSelectionChange = vi.fn();
+
+    render(
+      <DataTable
+        rows={rows}
+        columns={baseColumns}
+        enableRowSelection
+        selectedRowIds={new Set([1])}
+        onSelectionChange={onSelectionChange}
+      />
+    );
+
+    const selectRow1 = screen.getByLabelText("Select row 1");
+    const selectRow2 = screen.getByLabelText("Select row 2");
+
+    expect(selectRow1).toHaveAttribute("aria-checked", "true");
+    expect(selectRow2).toHaveAttribute("aria-checked", "false");
+
+    fireEvent.click(selectRow2);
+
+    const nextSelection = onSelectionChange.mock.calls[0][0] as Set<number>;
+    expect(Array.from(nextSelection)).toEqual([1, 2]);
+  });
+
+  it("uses defaultSelectedRowIds in uncontrolled mode", () => {
+    render(
+      <DataTable
+        rows={rows}
+        columns={baseColumns}
+        enableRowSelection
+        defaultSelectedRowIds={new Set([2])}
+      />
+    );
+
+    expect(screen.getByLabelText("Select row 1")).toHaveAttribute(
+      "aria-checked",
+      "false"
+    );
+    expect(screen.getByLabelText("Select row 2")).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+    expect(screen.getByLabelText("Select all rows")).toHaveAttribute(
+      "aria-checked",
+      "mixed"
+    );
+  });
 });

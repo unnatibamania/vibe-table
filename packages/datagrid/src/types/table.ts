@@ -19,7 +19,10 @@ export interface DataTableProps<T extends object> {
   emptyState?: React.ReactNode;
 
   // Step 3+: selection
-  // enableRowSelection?: boolean;
+  enableRowSelection?: boolean;
+  selectedRowIds?: Set<RowId>;
+  defaultSelectedRowIds?: Set<RowId>;
+  onSelectionChange?: (selectedIds: Set<RowId>) => void;
 
   // Step 4+: actions
   // rowActions?: DataTableRowAction<T>[];
@@ -47,6 +50,9 @@ export interface DataTableProps<T extends object> {
 export interface DataTableHeaderProps<T extends object> {
   columns: NormalizedDataTableColumn<T>[];
   classNames?: DataTableClassNames;
+  enableRowSelection?: boolean;
+  headerSelectionState?: boolean | "indeterminate";
+  onToggleSelectAll?: (checked: boolean | "indeterminate") => void;
 }
 
 export interface DataTableColumnProps

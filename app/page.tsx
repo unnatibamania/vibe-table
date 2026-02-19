@@ -1,7 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { DataTable, type DataTableColumnConfig } from "@/packages/datagrid/src";
+import {
+  DataTable,
+  type DataTableColumnConfig,
+  type RowId,
+} from "@/packages/datagrid/src";
 
 const LIBRARY_TABLE_COLUMNS_IDS = {
   STATUS: "status",
@@ -176,6 +180,9 @@ const columns: DataTableColumnConfig<DemoRow>[] = [
 
 export default function Home() {
   const [rows, setRows] = React.useState(initialRows);
+  const [selectedRowIds, setSelectedRowIds] = React.useState<Set<RowId>>(
+    new Set()
+  );
 
   const handleCellChange = React.useCallback(
     (rowId: string | number, columnId: string, newValue: unknown) => {
@@ -195,7 +202,17 @@ export default function Home() {
         Editable cells are enabled for text, number, boolean, date, select,
         multi-select, toggle, and rating types.
       </p>
-      <DataTable rows={rows} columns={columns} onCellChange={handleCellChange} />
+      <p className="mb-4 text-sm text-zinc-600">
+        Selected rows: {selectedRowIds.size}
+      </p>
+      <DataTable
+        rows={rows}
+        columns={columns}
+        onCellChange={handleCellChange}
+        enableRowSelection
+        selectedRowIds={selectedRowIds}
+        onSelectionChange={setSelectedRowIds}
+      />
     </main>
   );
 }
