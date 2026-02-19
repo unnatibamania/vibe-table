@@ -2,11 +2,17 @@
   "name": "vibe-tables",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "datagrid:typecheck": "npm run -w @vibe-tables/datagrid typecheck",
+    "datagrid:test": "npm run -w @vibe-tables/datagrid test",
+    "datagrid:test:watch": "npm run -w @vibe-tables/datagrid test:watch"
   },
   "dependencies": {
     "next": "16.1.6",
