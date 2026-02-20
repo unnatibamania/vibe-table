@@ -7,7 +7,11 @@ import { cn } from "../lib/cn";
 import { mergeColumnOrder, reorderColumnIds } from "../lib/column-order";
 import { normalizeColumns } from "../lib/normalize-columns";
 import type { NormalizedDataTableColumn } from "../types/column";
-import type { DataTableProps, DataTableSortState, RowId } from "../types/table";
+import type {
+  DataTableProps,
+  DataTableSortState,
+  RowId,
+} from "../types/table";
 import { EditableCellRenderer } from "./cell-editors";
 import { DataTableCell } from "./DataTableCell";
 import { DataTableHeader } from "./DataTableHeader";
@@ -42,6 +46,69 @@ type DataTableContextMenuState<T extends object> =
       column: NormalizedDataTableColumn<T>;
     }
   | null;
+
+type GroupedRenderItem<T extends object> =
+  | {
+      kind: "group-header";
+      key: string;
+      level: 1 | 2;
+      label: string;
+      rowCount: number;
+      value: unknown;
+      column: NormalizedDataTableColumn<T>;
+    }
+  | {
+      kind: "row";
+      key: string;
+      row: T;
+      rowId: RowId;
+      rowIndex: number;
+    };
+
+function getGroupValueKey(value: unknown) {
+  if (value == null) {
+    return "null";
+  }
+
+  if (value instanceof Date) {
+    return `date:${value.toISOString()}`;
+  }
+
+  if (Array.isArray(value)) {
+    return `array:${value.map((item) => String(item)).join("|")}`;
+  }
+
+  const valueType = typeof value;
+  if (valueType === "string" || valueType === "number" || valueType === "boolean") {
+    return `${valueType}:${String(value)}`;
+  }
+
+  try {
+    return `object:${JSON.stringify(value)}`;
+  } catch {
+    return `object:${String(value)}`;
+  }
+}
+
+function formatGroupLabelValue(value: unknown) {
+  if (value == null || value === "") {
+    return "Unspecified";
+  }
+
+  if (value instanceof Date) {
+    return value.toLocaleDateString();
+  }
+
+  if (Array.isArray(value)) {
+    return value.join(", ");
+  }
+
+  if (typeof value === "boolean") {
+    return value ? "True" : "False";
+  }
+
+  return String(value);
+}
 
 function compareSortValues(
   leftValue: unknown,
@@ -138,6 +205,9 @@ export function DataTable<T extends object>({
   defaultSortState = null,
   onSortChange,
   sortingMode = "client",
+  groupByColumnId = null,
+  subgroupByColumnId = null,
+  renderGroupHeader,
   classNames,
   isLoading = false,
   loadingRowCount = 3,
@@ -191,6 +261,24 @@ export function DataTable<T extends object>({
     () => [...leftPinnedColumns, ...centerColumns, ...rightPinnedColumns],
     [centerColumns, leftPinnedColumns, rightPinnedColumns]
   );
+
+  const orderedColumnMap = React.useMemo(
+    () => new Map(orderedColumns.map((column) => [column.id, column])),
+    [orderedColumns]
+  );
+
+  const groupingColumn = React.useMemo(
+    () => (groupByColumnId ? orderedColumnMap.get(groupByColumnId) : undefined),
+    [groupByColumnId, orderedColumnMap]
+  );
+
+  const subgroupingColumn = React.useMemo(() => {
+    if (!subgroupByColumnId || subgroupByColumnId === groupByColumnId) {
+      return undefined;
+    }
+
+    return orderedColumnMap.get(subgroupByColumnId);
+  }, [groupByColumnId, orderedColumnMap, subgroupByColumnId]);
 
   const [columnWidths, setColumnWidths] = React.useState<Record<string, number>>(
     {}
@@ -275,6 +363,130 @@ export function DataTable<T extends object>({
     () => sortedRowEntries.map((entry) => entry.rowId),
     [sortedRowEntries]
   );
+
+  const groupedRenderItems = React.useMemo(() => {
+    const rowItems = sortedRowEntries.map((entry, index) => ({
+      kind: "row" as const,
+      key: `row-${String(entry.rowId)}`,
+      row: entry.row,
+      rowId: entry.rowId,
+      rowIndex: index,
+    }));
+
+    if (!groupingColumn) {
+      return rowItems satisfies GroupedRenderItem<T>[];
+    }
+
+    const groupBuckets = new Map<
+      string,
+      {
+        value: unknown;
+        rows: typeof sortedRowEntries;
+      }
+    >();
+
+    sortedRowEntries.forEach((entry) => {
+      const rowRecord = entry.row as Record<string, unknown>;
+      const groupValue = rowRecord[groupingColumn.id];
+      const groupKey = getGroupValueKey(groupValue);
+      const bucket = groupBuckets.get(groupKey);
+
+      if (bucket) {
+        bucket.rows.push(entry);
+        return;
+      }
+
+      groupBuckets.set(groupKey, {
+        value: groupValue,
+        rows: [entry],
+      });
+    });
+
+    const items: GroupedRenderItem<T>[] = [];
+    let rowCounter = 0;
+
+    groupBuckets.forEach((groupBucket, groupKey) => {
+      const groupLabelValue = formatGroupLabelValue(groupBucket.value);
+      const groupLabel = `${groupingColumn.label}: ${groupLabelValue} (${groupBucket.rows.length})`;
+
+      items.push({
+        kind: "group-header",
+        key: `group-${groupingColumn.id}-${groupKey}`,
+        level: 1,
+        label: groupLabel,
+        rowCount: groupBucket.rows.length,
+        value: groupBucket.value,
+        column: groupingColumn,
+      });
+
+      if (!subgroupingColumn) {
+        groupBucket.rows.forEach((entry) => {
+          items.push({
+            kind: "row",
+            key: `row-${String(entry.rowId)}`,
+            row: entry.row,
+            rowId: entry.rowId,
+            rowIndex: rowCounter,
+          });
+          rowCounter += 1;
+        });
+        return;
+      }
+
+      const subgroupBuckets = new Map<
+        string,
+        {
+          value: unknown;
+          rows: typeof sortedRowEntries;
+        }
+      >();
+
+      groupBucket.rows.forEach((entry) => {
+        const rowRecord = entry.row as Record<string, unknown>;
+        const subgroupValue = rowRecord[subgroupingColumn.id];
+        const subgroupKey = getGroupValueKey(subgroupValue);
+        const subgroupBucket = subgroupBuckets.get(subgroupKey);
+
+        if (subgroupBucket) {
+          subgroupBucket.rows.push(entry);
+          return;
+        }
+
+        subgroupBuckets.set(subgroupKey, {
+          value: subgroupValue,
+          rows: [entry],
+        });
+      });
+
+      subgroupBuckets.forEach((subgroupBucket, subgroupKey) => {
+        const subgroupLabelValue = formatGroupLabelValue(subgroupBucket.value);
+        const subgroupLabel = `${subgroupingColumn.label}: ${subgroupLabelValue} (${subgroupBucket.rows.length})`;
+
+        items.push({
+          kind: "group-header",
+          key: `subgroup-${groupingColumn.id}-${groupKey}-${subgroupingColumn.id}-${subgroupKey}`,
+          level: 2,
+          label: subgroupLabel,
+          rowCount: subgroupBucket.rows.length,
+          value: subgroupBucket.value,
+          column: subgroupingColumn,
+        });
+
+        subgroupBucket.rows.forEach((entry) => {
+          items.push({
+            kind: "row",
+            key: `row-${String(entry.rowId)}`,
+            row: entry.row,
+            rowId: entry.rowId,
+            rowIndex: rowCounter,
+          });
+          rowCounter += 1;
+        });
+      });
+    });
+
+    return items;
+  }, [groupingColumn, sortedRowEntries, subgroupingColumn]);
 
   const isSelectionControlled = selectedRowIds !== undefined;
   const [internalSelectedRowIds, setInternalSelectedRowIds] = React.useState<
@@ -783,11 +995,49 @@ export function DataTable<T extends object>({
               ) : null}
 
               {!isLoading
-                ? sortedRowEntries.map(({ row, rowId }, rowIndex) => {
+                ? groupedRenderItems.map((item) => {
+                    if (item.kind === "group-header") {
+                      const headerContent = renderGroupHeader
+                        ? renderGroupHeader({
+                            level: item.level,
+                            column: item.column,
+                            value: item.value,
+                            label: item.label,
+                            rowCount: item.rowCount,
+                          })
+                        : item.label;
+
+                      return (
+                        <DataTableRow
+                          key={item.key}
+                          data-group-header="true"
+                          data-group-level={String(item.level)}
+                          className={cn(
+                            item.level === 1 ? classNames?.groupHeaderRow : classNames?.subgroupHeaderRow,
+                            item.level === 1
+                              ? "bg-zinc-100/90 hover:bg-zinc-100/90"
+                              : "bg-zinc-50 hover:bg-zinc-50"
+                          )}
+                        >
+                          <DataTableCell
+                            colSpan={resolvedColumnCount}
+                            className={cn(
+                              "px-3 py-2 font-medium text-zinc-700",
+                              item.level === 2 ? "pl-8 text-zinc-600" : "text-zinc-800",
+                              classNames?.groupHeaderCell
+                            )}
+                          >
+                            {headerContent}
+                          </DataTableCell>
+                        </DataTableRow>
+                      );
+                    }
+
+                    const { row, rowId, rowIndex } = item;
                     const isSelected = effectiveSelectedRowIds.has(rowId);
                     return (
                       <DataTableRow
-                        key={String(rowId)}
+                        key={item.key}
                         data-row-id={String(rowId)}
                         data-selected={isSelected ? "true" : "false"}
                         className={cn(classNames?.row, isSelected ? "bg-zinc-50" : undefined)}

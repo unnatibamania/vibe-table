@@ -7,6 +7,9 @@ export interface DataTableClassNames {
   tbody?: string;
   row?: string;
   cell?: string;
+  groupHeaderRow?: string;
+  subgroupHeaderRow?: string;
+  groupHeaderCell?: string;
   emptyState?: string;
   loadingRow?: string;
 }

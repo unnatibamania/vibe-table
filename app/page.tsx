@@ -17,6 +17,7 @@ const LIBRARY_TABLE_COLUMNS_IDS = {
   ACTIVE: "active",
   FEATURED: "featured",
   UPDATED_AT: "updatedAt",
+  UPLOADED_BY: "uploadedBy",
   PRIORITY: "priority",
   TAGS: "tags",
   RATING: "rating",
@@ -30,6 +31,7 @@ type DemoRow = {
   active: boolean;
   featured: boolean;
   updatedAt: string;
+  uploadedBy: string;
   priority: string;
   tags: string[];
   rating: number;
@@ -44,6 +46,7 @@ const initialRows: DemoRow[] = [
     active: true,
     featured: false,
     updatedAt: "2026-02-19",
+    uploadedBy: "Nitin Ranganath",
     priority: "high",
     tags: ["frontend"],
     rating: 4,
@@ -56,6 +59,7 @@ const initialRows: DemoRow[] = [
     active: false,
     featured: true,
     updatedAt: "2026-02-18",
+    uploadedBy: "Unnati Bamania",
     priority: "medium",
     tags: ["backend", "api"],
     rating: 3,
@@ -68,6 +72,7 @@ const initialRows: DemoRow[] = [
     active: true,
     featured: false,
     updatedAt: "2026-02-17",
+    uploadedBy: "Unnati Bamania",
     priority: "low",
     tags: ["ops"],
     rating: 2,
@@ -147,6 +152,14 @@ const initialColumns: DataTableColumnConfig<DemoRow>[] = [
     type: "date",
   },
   {
+    id: LIBRARY_TABLE_COLUMNS_IDS.UPLOADED_BY,
+    label: "Uploaded By",
+    header: "Uploaded By",
+    minWidth: 180,
+    isSortable: true,
+    type: "text",
+  },
+  {
     id: LIBRARY_TABLE_COLUMNS_IDS.PRIORITY,
     label: "Priority",
     header: "Priority",
@@ -200,6 +213,12 @@ export default function Home() {
   const [lastResize, setLastResize] = React.useState<string>("none");
   const [sortState, setSortState] = React.useState<DataTableSortState | null>(
     null
+  );
+  const [groupByColumnId] = React.useState<string | null>(
+    LIBRARY_TABLE_COLUMNS_IDS.AGE
+  );
+  const [subgroupByColumnId] = React.useState<string | null>(
+    LIBRARY_TABLE_COLUMNS_IDS.UPLOADED_BY
   );
 
   const handleCellChange = React.useCallback(
@@ -293,10 +312,11 @@ export default function Home() {
 
   return (
     <main className="mx-auto max-w-7xl p-8">
-      <h1 className="mb-4 text-2xl font-semibold">DataTable Step 8 Demo</h1>
+      <h1 className="mb-4 text-2xl font-semibold">DataTable Grouping Demo</h1>
       <p className="mb-6 text-sm text-zinc-600">
         Editable cells are enabled for text, number, boolean, date, select,
-        multi-select, toggle, and rating types with pinning and sorting support.
+        multi-select, toggle, and rating types with pinning, sorting, and
+        grouping support.
       </p>
       <p className="mb-4 text-sm text-zinc-600">
         Selected rows: {selectedRowIds.size}
@@ -309,6 +329,9 @@ export default function Home() {
       <p className="mb-4 text-sm text-zinc-600">
         Sort state:{" "}
         {sortState ? `${sortState.columnId} (${sortState.direction})` : "none"}
+      </p>
+      <p className="mb-4 text-sm text-zinc-600">
+        Grouping: {groupByColumnId ?? "none"} / {subgroupByColumnId ?? "none"}
       </p>
       <DataTable
         rows={rows}
@@ -325,6 +348,8 @@ export default function Home() {
         }
         sortState={sortState}
         onSortChange={setSortState}
+        groupByColumnId={groupByColumnId}
+        subgroupByColumnId={subgroupByColumnId}
       />
     </main>
   );

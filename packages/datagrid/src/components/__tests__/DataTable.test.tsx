@@ -12,6 +12,7 @@ interface Row {
   age: number;
   status: string;
   hidden?: string;
+  uploadedBy?: string;
 }
 
 const rows: Row[] = [
@@ -385,6 +386,91 @@ describe("DataTable", () => {
     await user.click(await screen.findByText("Inspect column"));
 
     expect(onColumnAction).toHaveBeenCalledWith("name");
+  });
+
+  it("renders group headers as full rows when grouped by a column", () => {
+    const columns: DataTableColumn<Row>[] = [
+      {
+        id: "name",
+        label: "Name",
+        header: "Name",
+        type: "text",
+      },
+      {
+        id: "status",
+        label: "Status",
+        header: "Status",
+        type: "text",
+      },
+    ];
+
+    const groupedRows: Row[] = [
+      { id: 1, name: "File A", age: 0, status: "Not Started" },
+      { id: 2, name: "File B", age: 0, status: "Not Started" },
+      { id: 3, name: "File C", age: 0, status: "Processed" },
+    ];
+
+    const { container } = render(
+      <DataTable rows={groupedRows} columns={columns} groupByColumnId="status" />
+    );
+
+    expect(screen.getByText("Status: Not Started (2)")).toBeInTheDocument();
+    expect(screen.getByText("Status: Processed (1)")).toBeInTheDocument();
+
+    const groupCell = screen.getByText("Status: Not Started (2)").closest("td");
+    expect(groupCell).toHaveAttribute("colspan", "2");
+
+    const allRows = container.querySelectorAll("tbody tr");
+    expect(allRows).toHaveLength(5);
+  });
+
+  it("renders subgroup headers as full rows when subgrouping is enabled", () => {
+    const columns: DataTableColumn<Row>[] = [
+      {
+        id: "name",
+        label: "Name",
+        header: "Name",
+        type: "text",
+      },
+      {
+        id: "status",
+        label: "Status",
+        header: "Status",
+        type: "text",
+      },
+      {
+        id: "uploadedBy",
+        label: "Uploaded By",
+        header: "Uploaded By",
+        type: "text",
+      },
+    ];
+
+    const groupedRows: Row[] = [
+      { id: 1, name: "A", age: 0, status: "Not Started", uploadedBy: "Nitin" },
+      { id: 2, name: "B", age: 0, status: "Not Started", uploadedBy: "Unnati" },
+      { id: 3, name: "C", age: 0, status: "Not Started", uploadedBy: "Unnati" },
+      { id: 4, name: "D", age: 0, status: "Processed", uploadedBy: "Nitin" },
+    ];
+
+    render(
+      <DataTable
+        rows={groupedRows}
+        columns={columns}
+        groupByColumnId="status"
+        subgroupByColumnId="uploadedBy"
+      />
+    );
+
+    expect(screen.getByText("Status: Not Started (3)")).toBeInTheDocument();
+    expect(screen.getByText("Status: Processed (1)")).toBeInTheDocument();
+    expect(screen.getAllByText("Uploaded By: Nitin (1)")).toHaveLength(2);
+    expect(screen.getByText("Uploaded By: Unnati (2)")).toBeInTheDocument();
+
+    const subgroupHeader = screen
+      .getByText("Uploaded By: Unnati (2)")
+      .closest("tr") as HTMLTableRowElement;
+    expect(subgroupHeader).toHaveAttribute("data-group-level", "2");
   });
 
   it("renders drag handles for draggable columns and hides when disabled", () => {

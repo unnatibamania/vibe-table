@@ -14,6 +14,14 @@ export interface DataTableSortState {
   direction: DataTableSortDirection;
 }
 
+export interface DataTableGroupHeaderContext<T extends object> {
+  level: 1 | 2;
+  column: DataTableColumn<T>;
+  value: unknown;
+  label: string;
+  rowCount: number;
+}
+
 export interface DataTableProps<T extends object> {
   rows: T[];
   columns: DataTableColumn<T>[];
@@ -53,7 +61,11 @@ export interface DataTableProps<T extends object> {
   // contextMenu?: unknown;
 
   // Step 10+: grouping and subgrouping
-  // grouping?: unknown;
+  groupByColumnId?: string | null;
+  subgroupByColumnId?: string | null;
+  renderGroupHeader?: (
+    context: DataTableGroupHeaderContext<T>
+  ) => React.ReactNode;
 }
 
 export interface DataTableHeaderProps<T extends object> {
@@ -94,4 +106,9 @@ export interface DataTableCellProps
   maxWidth?: number;
 }
 
-export type { DataTableClassNames, DataTableColumn, DataTableColumnAction, DataTableRowAction };
+export type {
+  DataTableClassNames,
+  DataTableColumn,
+  DataTableColumnAction,
+  DataTableRowAction,
+};

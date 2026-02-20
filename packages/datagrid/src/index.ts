@@ -53,6 +53,7 @@ export type { DataTableClassNames } from "./types/class-names";
 export type {
   DataTableCellProps,
   DataTableColumnProps,
+  DataTableGroupHeaderContext,
   DataTableHeaderProps,
   DataTableProps,
   DataTableRowProps,
