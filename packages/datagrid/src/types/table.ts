@@ -7,6 +7,12 @@ import type { DataTableClassNames } from "./class-names";
 import type { DataTableColumnAction, DataTableRowAction } from "./actions";
 
 export type RowId = string | number;
+export type DataTableSortDirection = "asc" | "desc";
+
+export interface DataTableSortState {
+  columnId: string;
+  direction: DataTableSortDirection;
+}
 
 export interface DataTableProps<T extends object> {
   rows: T[];
@@ -38,7 +44,10 @@ export interface DataTableProps<T extends object> {
   // onColumnPin?: (columnId: string, side: "left" | "right" | null) => void;
 
   // Step 8+: sorting
-  // sorting?: unknown;
+  sortState?: DataTableSortState | null;
+  defaultSortState?: DataTableSortState | null;
+  onSortChange?: (nextSortState: DataTableSortState | null) => void;
+  sortingMode?: "client" | "manual";
 
   // Step 9+: right-click context menu
   // contextMenu?: unknown;
@@ -63,6 +72,8 @@ export interface DataTableHeaderProps<T extends object> {
   rightPinnedOffsets?: Record<string, number>;
   stickySelectionColumn?: boolean;
   stickyRowActionsColumn?: boolean;
+  sortState?: DataTableSortState | null;
+  onSortToggle?: (columnId: string) => void;
 }
 
 export interface DataTableColumnProps

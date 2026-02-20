@@ -26,6 +26,8 @@ export function DataTableHeader<T extends object>({
   rightPinnedOffsets = {},
   stickySelectionColumn = false,
   stickyRowActionsColumn = false,
+  sortState = null,
+  onSortToggle,
 }: DataTableHeaderProps<T>) {
   return (
     <thead className={cn("bg-zinc-50", classNames?.thead)}>
@@ -75,6 +77,11 @@ export function DataTableHeader<T extends object>({
                     ? rightPinnedOffsets[column.id]
                     : undefined
               }
+              isSortable={column.isSortable === true}
+              sortDirection={
+                sortState?.columnId === column.id ? sortState.direction : null
+              }
+              onSortToggle={onSortToggle}
             />
           ))}
           {showRowActionsColumn ? (

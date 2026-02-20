@@ -3,10 +3,11 @@
 import * as React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, GripVertical } from "lucide-react";
 import { cn } from "../lib/cn";
 import type { DataTableColumnAction } from "../types/actions";
 import type { NormalizedDataTableColumn } from "../types/column";
+import type { DataTableSortDirection } from "../types/table";
 import { ColumnActionsMenu } from "./column-actions-menu";
 import { DataTableColumn } from "./DataTableColumn";
 
@@ -20,6 +21,9 @@ interface DraggableHeaderColumnProps<T extends object> {
   onColumnWidthMeasure?: (columnId: string, width: number) => void;
   pinSide?: "left" | "right" | null;
   pinOffset?: number;
+  isSortable?: boolean;
+  sortDirection?: DataTableSortDirection | null;
+  onSortToggle?: (columnId: string) => void;
 }
 
 export function DraggableHeaderColumn<T extends object>({
@@ -32,6 +36,9 @@ export function DraggableHeaderColumn<T extends object>({
   onColumnWidthMeasure,
   pinSide = null,
   pinOffset = 0,
+  isSortable = false,
+  sortDirection = null,
+  onSortToggle,
 }: DraggableHeaderColumnProps<T>) {
   const columnRef = React.useRef<HTMLTableCellElement | null>(null);
   const [columnWidth, setColumnWidth] = React.useState<number | null>(null);
@@ -93,6 +100,22 @@ export function DraggableHeaderColumn<T extends object>({
     style.maxWidth = `${effectiveWidth}px`;
   }
 
+  const ariaSortValue = isSortable
+    ? sortDirection === "asc"
+      ? "ascending"
+      : sortDirection === "desc"
+        ? "descending"
+        : "none"
+    : undefined;
+
+  const sortIcon = !isSortable ? null : sortDirection === "asc" ? (
+    <ArrowUp className="h-3.5 w-3.5 text-zinc-700" />
+  ) : sortDirection === "desc" ? (
+    <ArrowDown className="h-3.5 w-3.5 text-zinc-700" />
+  ) : (
+    <ArrowUpDown className="h-3.5 w-3.5 text-zinc-400" />
+  );
+
   return (
     <DataTableColumn
       ref={setRefs}
@@ -106,6 +129,7 @@ export function DraggableHeaderColumn<T extends object>({
       style={style}
       data-draggable={isDraggable ? "true" : "false"}
       data-pin-side={pinSide ?? undefined}
+      aria-sort={ariaSortValue as React.AriaAttributes["aria-sort"]}
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-1">
@@ -121,7 +145,19 @@ export function DraggableHeaderColumn<T extends object>({
               <GripVertical className="h-3.5 w-3.5" />
             </button>
           ) : null}
-          <span className="truncate">{column.header ?? column.label}</span>
+          {isSortable ? (
+            <button
+              type="button"
+              className="inline-flex min-w-0 items-center gap-2 rounded px-1 py-0.5 text-left hover:bg-zinc-100"
+              onClick={() => onSortToggle?.(column.id)}
+              data-testid={`sort-trigger-${column.id}`}
+            >
+              <span className="truncate">{column.header ?? column.label}</span>
+              {sortIcon}
+            </button>
+          ) : (
+            <span className="truncate">{column.header ?? column.label}</span>
+          )}
         </div>
         {column.showColumnActions === false ? null : (
           <ColumnActionsMenu column={column} actions={columnActions} />

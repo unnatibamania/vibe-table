@@ -6,8 +6,7 @@ import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import { cn } from "../lib/cn";
 import { mergeColumnOrder, reorderColumnIds } from "../lib/column-order";
 import { normalizeColumns } from "../lib/normalize-columns";
-import type { RowId } from "../types/table";
-import type { DataTableProps } from "../types/table";
+import type { DataTableProps, DataTableSortState, RowId } from "../types/table";
 import { EditableCellRenderer } from "./cell-editors";
 import { DataTableCell } from "./DataTableCell";
 import { DataTableHeader } from "./DataTableHeader";
@@ -20,6 +19,84 @@ function defaultSkeletonCell() {
 }
 
 const UTILITY_COLUMN_WIDTH = 44;
+
+function compareSortValues(
+  leftValue: unknown,
+  rightValue: unknown,
+  sortHint?: string
+) {
+  if (leftValue == null && rightValue == null) {
+    return 0;
+  }
+  if (leftValue == null) {
+    return 1;
+  }
+  if (rightValue == null) {
+    return -1;
+  }
+
+  if (typeof leftValue === "number" && typeof rightValue === "number") {
+    return leftValue - rightValue;
+  }
+
+  if (typeof leftValue === "boolean" && typeof rightValue === "boolean") {
+    return Number(leftValue) - Number(rightValue);
+  }
+
+  if (leftValue instanceof Date && rightValue instanceof Date) {
+    return leftValue.getTime() - rightValue.getTime();
+  }
+
+  const leftText = Array.isArray(leftValue) ? leftValue.join(", ") : String(leftValue);
+  const rightText = Array.isArray(rightValue)
+    ? rightValue.join(", ")
+    : String(rightValue);
+
+  if (sortHint === "date") {
+    const leftDate = Date.parse(leftText);
+    const rightDate = Date.parse(rightText);
+    if (!Number.isNaN(leftDate) && !Number.isNaN(rightDate)) {
+      return leftDate - rightDate;
+    }
+  }
+
+  const leftNumeric = Number(leftText);
+  const rightNumeric = Number(rightText);
+  if (
+    leftText.trim() !== "" &&
+    rightText.trim() !== "" &&
+    !Number.isNaN(leftNumeric) &&
+    !Number.isNaN(rightNumeric)
+  ) {
+    return leftNumeric - rightNumeric;
+  }
+
+  return leftText.localeCompare(rightText, undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
+}
+
+function resolveNextSortState(
+  currentSortState: DataTableSortState | null,
+  columnId: string
+): DataTableSortState | null {
+  if (!currentSortState || currentSortState.columnId !== columnId) {
+    return {
+      columnId,
+      direction: "asc",
+    };
+  }
+
+  if (currentSortState.direction === "asc") {
+    return {
+      columnId,
+      direction: "desc",
+    };
+  }
+
+  return null;
+}
 
 export function DataTable<T extends object>({
   rows,
@@ -34,6 +111,10 @@ export function DataTable<T extends object>({
   columnActions = [],
   onColumnOrderChange,
   onColumnResize,
+  sortState,
+  defaultSortState = null,
+  onSortChange,
+  sortingMode = "client",
   classNames,
   isLoading = false,
   loadingRowCount = 3,
@@ -97,6 +178,14 @@ export function DataTable<T extends object>({
     startWidth: number;
   } | null>(null);
 
+  const isSortControlled = sortState !== undefined;
+  const [internalSortState, setInternalSortState] =
+    React.useState<DataTableSortState | null>(defaultSortState);
+
+  const effectiveSortState = isSortControlled
+    ? (sortState ?? null)
+    : internalSortState;
+
   const resolveRowId = React.useCallback(
     (row: T, index: number): RowId => {
       if (getRowId) {
@@ -113,9 +202,53 @@ export function DataTable<T extends object>({
     [getRowId]
   );
 
-  const resolvedRowIds = React.useMemo(
-    () => rows.map((row, rowIndex) => resolveRowId(row, rowIndex)),
+  const rowEntries = React.useMemo(
+    () =>
+      rows.map((row, rowIndex) => ({
+        row,
+        rowId: resolveRowId(row, rowIndex),
+        originalIndex: rowIndex,
+      })),
     [rows, resolveRowId]
+  );
+
+  const sortedRowEntries = React.useMemo(() => {
+    if (sortingMode === "manual" || !effectiveSortState) {
+      return rowEntries;
+    }
+
+    const sortableColumn = sortedVisibleColumns.find(
+      (column) =>
+        column.id === effectiveSortState.columnId && column.isSortable === true
+    );
+    if (!sortableColumn) {
+      return rowEntries;
+    }
+
+    const directionMultiplier = effectiveSortState.direction === "asc" ? 1 : -1;
+
+    return [...rowEntries].sort((leftEntry, rightEntry) => {
+      const leftRecord = leftEntry.row as Record<string, unknown>;
+      const rightRecord = rightEntry.row as Record<string, unknown>;
+      const leftValue = leftRecord[sortableColumn.id];
+      const rightValue = rightRecord[sortableColumn.id];
+      const comparison = compareSortValues(
+        leftValue,
+        rightValue,
+        sortableColumn.type
+      );
+
+      if (comparison === 0) {
+        return leftEntry.originalIndex - rightEntry.originalIndex;
+      }
+
+      return comparison * directionMultiplier;
+    });
+  }, [effectiveSortState, rowEntries, sortedVisibleColumns, sortingMode]);
+
+  const resolvedRowIds = React.useMemo(
+    () => sortedRowEntries.map((entry) => entry.rowId),
+    [sortedRowEntries]
   );
 
   const isSelectionControlled = selectedRowIds !== undefined;
@@ -262,6 +395,44 @@ export function DataTable<T extends object>({
     },
     [onColumnOrderChange, sortedVisibleColumns]
   );
+
+  const emitSortChange = React.useCallback(
+    (nextSortState: DataTableSortState | null) => {
+      if (!isSortControlled) {
+        setInternalSortState(nextSortState);
+      }
+      onSortChange?.(nextSortState);
+    },
+    [isSortControlled, onSortChange]
+  );
+
+  const handleSortToggle = React.useCallback(
+    (columnId: string) => {
+      const targetColumn = sortedVisibleColumns.find(
+        (column) => column.id === columnId
+      );
+      if (!targetColumn || targetColumn.isSortable !== true) {
+        return;
+      }
+
+      const nextSortState = resolveNextSortState(effectiveSortState, columnId);
+      emitSortChange(nextSortState);
+    },
+    [effectiveSortState, emitSortChange, sortedVisibleColumns]
+  );
+
+  React.useEffect(() => {
+    if (!effectiveSortState || isSortControlled) {
+      return;
+    }
+
+    const activeColumn = sortedVisibleColumns.find(
+      (column) => column.id === effectiveSortState.columnId
+    );
+    if (!activeColumn || activeColumn.isSortable !== true) {
+      setInternalSortState(null);
+    }
+  }, [effectiveSortState, isSortControlled, sortedVisibleColumns]);
 
   const handleResizeStart = React.useCallback(
     (columnId: string, startX: number, startWidth: number) => {
@@ -451,6 +622,8 @@ export function DataTable<T extends object>({
             rightPinnedOffsets={rightPinnedOffsets}
             stickySelectionColumn={stickySelectionColumn}
             stickyRowActionsColumn={stickyRowActionsColumn}
+            sortState={effectiveSortState}
+            onSortToggle={handleSortToggle}
           />
 
           <tbody className={cn(classNames?.tbody)}>
@@ -526,8 +699,7 @@ export function DataTable<T extends object>({
             ) : null}
 
             {!isLoading
-              ? rows.map((row, rowIndex) => {
-                  const rowId = resolveRowId(row, rowIndex);
+              ? sortedRowEntries.map(({ row, rowId }, rowIndex) => {
                   const isSelected = effectiveSelectedRowIds.has(rowId);
                   return (
                     <DataTableRow

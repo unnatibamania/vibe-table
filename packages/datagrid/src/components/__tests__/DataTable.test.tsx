@@ -496,4 +496,86 @@ describe("DataTable", () => {
     expect(onColumnResize).toHaveBeenLastCalledWith("name", 100);
     expect(headerCell).toHaveStyle({ width: "100px" });
   });
+
+  it("sorts rows in client mode and cycles asc, desc, none", () => {
+    const sortableColumns: DataTableColumn<Row>[] = [
+      {
+        id: "name",
+        label: "Name",
+        header: "Name",
+        type: "text",
+      },
+      {
+        id: "age",
+        label: "Age",
+        header: "Age",
+        type: "number",
+        isSortable: true,
+      },
+    ];
+
+    const { container } = render(<DataTable rows={rows} columns={sortableColumns} />);
+    const sortTrigger = screen.getByTestId("sort-trigger-age");
+    const ageHeader = screen.getByRole("columnheader", { name: /Age/ });
+
+    const getRenderedNames = () =>
+      Array.from(container.querySelectorAll("tbody tr")).map((row) =>
+        row.querySelector("td")?.textContent?.trim()
+      );
+
+    expect(getRenderedNames()).toEqual(["Alice", "Bob"]);
+    expect(ageHeader).toHaveAttribute("aria-sort", "none");
+
+    fireEvent.click(sortTrigger);
+    expect(ageHeader).toHaveAttribute("aria-sort", "ascending");
+    expect(getRenderedNames()).toEqual(["Bob", "Alice"]);
+
+    fireEvent.click(sortTrigger);
+    expect(ageHeader).toHaveAttribute("aria-sort", "descending");
+    expect(getRenderedNames()).toEqual(["Alice", "Bob"]);
+
+    fireEvent.click(sortTrigger);
+    expect(ageHeader).toHaveAttribute("aria-sort", "none");
+    expect(getRenderedNames()).toEqual(["Alice", "Bob"]);
+  });
+
+  it("emits sort changes without reordering rows in manual mode", () => {
+    const onSortChange = vi.fn();
+    const sortableColumns: DataTableColumn<Row>[] = [
+      {
+        id: "name",
+        label: "Name",
+        header: "Name",
+        type: "text",
+      },
+      {
+        id: "age",
+        label: "Age",
+        header: "Age",
+        type: "number",
+        isSortable: true,
+      },
+    ];
+
+    const { container } = render(
+      <DataTable
+        rows={rows}
+        columns={sortableColumns}
+        sortingMode="manual"
+        onSortChange={onSortChange}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId("sort-trigger-age"));
+
+    const renderedNames = Array.from(container.querySelectorAll("tbody tr")).map(
+      (row) => row.querySelector("td")?.textContent?.trim()
+    );
+
+    expect(renderedNames).toEqual(["Alice", "Bob"]);
+    expect(onSortChange).toHaveBeenCalledWith({
+      columnId: "age",
+      direction: "asc",
+    });
+  });
 });

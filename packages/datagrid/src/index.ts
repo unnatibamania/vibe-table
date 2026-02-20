@@ -56,5 +56,7 @@ export type {
   DataTableHeaderProps,
   DataTableProps,
   DataTableRowProps,
+  DataTableSortDirection,
+  DataTableSortState,
   RowId,
 } from "./types/table";

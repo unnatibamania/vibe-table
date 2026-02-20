@@ -6,6 +6,7 @@ import {
   type DataTableColumnAction,
   type DataTableColumnConfig,
   type DataTableRowAction,
+  type DataTableSortState,
   type RowId,
 } from "@/packages/datagrid/src";
 
@@ -73,7 +74,7 @@ const initialRows: DemoRow[] = [
   },
 ];
 
-const columns: DataTableColumnConfig<DemoRow>[] = [
+const initialColumns: DataTableColumnConfig<DemoRow>[] = [
   {
     id: LIBRARY_TABLE_COLUMNS_IDS.STATUS,
     label: "Status",
@@ -85,7 +86,6 @@ const columns: DataTableColumnConfig<DemoRow>[] = [
     ),
     minWidth: 140,
     maxWidth: 190,
-    // pin: "left",
     isResizable: false,
     isHidden: false,
     isDraggable: false,
@@ -109,6 +109,7 @@ const columns: DataTableColumnConfig<DemoRow>[] = [
     header: "Name",
     minWidth: 160,
     isEditable: true,
+    isSortable: true,
     type: "text",
   },
   {
@@ -117,6 +118,7 @@ const columns: DataTableColumnConfig<DemoRow>[] = [
     header: "Age",
     minWidth: 100,
     isEditable: true,
+    isSortable: true,
     type: "number",
   },
   {
@@ -141,6 +143,7 @@ const columns: DataTableColumnConfig<DemoRow>[] = [
     header: "Updated",
     minWidth: 140,
     isEditable: true,
+    isSortable: true,
     type: "date",
   },
   {
@@ -149,6 +152,7 @@ const columns: DataTableColumnConfig<DemoRow>[] = [
     header: "Priority",
     minWidth: 130,
     isEditable: true,
+    isSortable: true,
     type: "select",
     selectOptions: [
       { label: "Low", value: "low" },
@@ -175,8 +179,8 @@ const columns: DataTableColumnConfig<DemoRow>[] = [
     label: "Rating",
     header: "Rating",
     minWidth: 170,
-    // pin: "right",
     isEditable: true,
+    isSortable: true,
     type: "rating",
     maxRating: 5,
   },
@@ -184,14 +188,19 @@ const columns: DataTableColumnConfig<DemoRow>[] = [
 
 export default function Home() {
   const [rows, setRows] = React.useState(initialRows);
+  const [columns, setColumns] =
+    React.useState<DataTableColumnConfig<DemoRow>[]>(initialColumns);
   const [selectedRowIds, setSelectedRowIds] = React.useState<Set<RowId>>(
     new Set()
   );
   const [lastAction, setLastAction] = React.useState<string>("none");
   const [columnOrder, setColumnOrder] = React.useState<string[]>(
-    columns.map((column) => column.id)
+    initialColumns.map((column) => column.id)
   );
   const [lastResize, setLastResize] = React.useState<string>("none");
+  const [sortState, setSortState] = React.useState<DataTableSortState | null>(
+    null
+  );
 
   const handleCellChange = React.useCallback(
     (rowId: string | number, columnId: string, newValue: unknown) => {
@@ -234,6 +243,17 @@ export default function Home() {
     []
   );
 
+  const setColumnPin = React.useCallback(
+    (columnId: string, pin: "left" | "right" | null) => {
+      setColumns((currentColumns) =>
+        currentColumns.map((column) =>
+          column.id === columnId ? { ...column, pin } : column
+        )
+      );
+    },
+    []
+  );
+
   const columnActions = React.useMemo<DataTableColumnAction<DemoRow>[]>(
     () => [
       {
@@ -243,16 +263,40 @@ export default function Home() {
           setLastAction(`column:${column.id}:log_column`);
         },
       },
+      {
+        label: "Pin left",
+        value: "pin_left",
+        action: (column) => {
+          setColumnPin(column.id, "left");
+          setLastAction(`column:${column.id}:pin_left`);
+        },
+      },
+      {
+        label: "Pin right",
+        value: "pin_right",
+        action: (column) => {
+          setColumnPin(column.id, "right");
+          setLastAction(`column:${column.id}:pin_right`);
+        },
+      },
+      {
+        label: "Remove pin",
+        value: "remove_pin",
+        action: (column) => {
+          setColumnPin(column.id, null);
+          setLastAction(`column:${column.id}:remove_pin`);
+        },
+      },
     ],
-    []
+    [setColumnPin]
   );
 
   return (
     <main className="mx-auto max-w-7xl p-8">
-      <h1 className="mb-4 text-2xl font-semibold">DataTable Step 7 Demo</h1>
+      <h1 className="mb-4 text-2xl font-semibold">DataTable Step 8 Demo</h1>
       <p className="mb-6 text-sm text-zinc-600">
         Editable cells are enabled for text, number, boolean, date, select,
-        multi-select, toggle, and rating types with pinned columns support.
+        multi-select, toggle, and rating types with pinning and sorting support.
       </p>
       <p className="mb-4 text-sm text-zinc-600">
         Selected rows: {selectedRowIds.size}
@@ -262,6 +306,10 @@ export default function Home() {
         Column order: {columnOrder.join(" > ")}
       </p>
       <p className="mb-4 text-sm text-zinc-600">Last resize: {lastResize}</p>
+      <p className="mb-4 text-sm text-zinc-600">
+        Sort state:{" "}
+        {sortState ? `${sortState.columnId} (${sortState.direction})` : "none"}
+      </p>
       <DataTable
         rows={rows}
         columns={columns}
@@ -275,6 +323,8 @@ export default function Home() {
         onColumnResize={(columnId, width) =>
           setLastResize(`${columnId}: ${Math.round(width)}px`)
         }
+        sortState={sortState}
+        onSortChange={setSortState}
       />
     </main>
   );
