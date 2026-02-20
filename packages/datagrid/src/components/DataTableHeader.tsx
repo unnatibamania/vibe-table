@@ -18,6 +18,14 @@ export function DataTableHeader<T extends object>({
   onToggleSelectAll,
   showRowActionsColumn = false,
   columnActions = [],
+  columnWidths = {},
+  resizingColumnId = null,
+  onResizeStart,
+  onColumnWidthMeasure,
+  leftPinnedOffsets = {},
+  rightPinnedOffsets = {},
+  stickySelectionColumn = false,
+  stickyRowActionsColumn = false,
 }: DataTableHeaderProps<T>) {
   return (
     <thead className={cn("bg-zinc-50", classNames?.thead)}>
@@ -27,7 +35,19 @@ export function DataTableHeader<T extends object>({
       >
         <DataTableRow className={cn("h-11", classNames?.headerRow)}>
           {enableRowSelection ? (
-            <DataTableColumn className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}>
+            <DataTableColumn
+              className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}
+              style={
+                stickySelectionColumn
+                  ? {
+                      position: "sticky",
+                      left: "0px",
+                      zIndex: 35,
+                      backgroundColor: "rgb(250 250 250)",
+                    }
+                  : undefined
+              }
+            >
               <div className="flex items-center justify-center">
                 <Checkbox
                   checked={headerSelectionState}
@@ -43,10 +63,34 @@ export function DataTableHeader<T extends object>({
               column={column}
               className={cn(classNames?.headerCell)}
               columnActions={columnActions}
+              width={columnWidths[column.id]}
+              isResizing={resizingColumnId === column.id}
+              onResizeStart={onResizeStart}
+              onColumnWidthMeasure={onColumnWidthMeasure}
+              pinSide={column.pin ?? null}
+              pinOffset={
+                column.pin === "left"
+                  ? leftPinnedOffsets[column.id]
+                  : column.pin === "right"
+                    ? rightPinnedOffsets[column.id]
+                    : undefined
+              }
             />
           ))}
           {showRowActionsColumn ? (
-            <DataTableColumn className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}>
+            <DataTableColumn
+              className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}
+              style={
+                stickyRowActionsColumn
+                  ? {
+                      position: "sticky",
+                      right: "0px",
+                      zIndex: 35,
+                      backgroundColor: "rgb(250 250 250)",
+                    }
+                  : undefined
+              }
+            >
               <div className="flex items-center justify-center">
                 <MoreHorizontal className="h-4 w-4 text-zinc-500" />
               </div>

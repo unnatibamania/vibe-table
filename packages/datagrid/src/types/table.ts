@@ -32,7 +32,7 @@ export interface DataTableProps<T extends object> {
   onColumnOrderChange?: (columnIds: string[]) => void;
 
   // Step 6+: resizable columns
-  // onColumnResize?: (columnId: string, width: number) => void;
+  onColumnResize?: (columnId: string, width: number) => void;
 
   // Step 7+: pinning
   // onColumnPin?: (columnId: string, side: "left" | "right" | null) => void;
@@ -55,6 +55,14 @@ export interface DataTableHeaderProps<T extends object> {
   onToggleSelectAll?: (checked: boolean | "indeterminate") => void;
   showRowActionsColumn?: boolean;
   columnActions?: DataTableColumnAction<T>[];
+  columnWidths?: Record<string, number>;
+  resizingColumnId?: string | null;
+  onResizeStart?: (columnId: string, startX: number, startWidth: number) => void;
+  onColumnWidthMeasure?: (columnId: string, width: number) => void;
+  leftPinnedOffsets?: Record<string, number>;
+  rightPinnedOffsets?: Record<string, number>;
+  stickySelectionColumn?: boolean;
+  stickyRowActionsColumn?: boolean;
 }
 
 export interface DataTableColumnProps

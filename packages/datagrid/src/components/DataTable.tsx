@@ -19,6 +19,8 @@ function defaultSkeletonCell() {
   return <div className="h-4 w-full animate-pulse rounded bg-zinc-200" />;
 }
 
+const UTILITY_COLUMN_WIDTH = 44;
+
 export function DataTable<T extends object>({
   rows,
   columns,
@@ -31,6 +33,7 @@ export function DataTable<T extends object>({
   rowActions = [],
   columnActions = [],
   onColumnOrderChange,
+  onColumnResize,
   classNames,
   isLoading = false,
   loadingRowCount = 3,
@@ -61,6 +64,38 @@ export function DataTable<T extends object>({
     () => orderedColumns.filter((column) => column.isVisible),
     [orderedColumns]
   );
+
+  const leftPinnedColumns = React.useMemo(
+    () => visibleColumns.filter((column) => column.pin === "left"),
+    [visibleColumns]
+  );
+
+  const rightPinnedColumns = React.useMemo(
+    () => visibleColumns.filter((column) => column.pin === "right"),
+    [visibleColumns]
+  );
+
+  const centerColumns = React.useMemo(
+    () =>
+      visibleColumns.filter(
+        (column) => column.pin !== "left" && column.pin !== "right"
+      ),
+    [visibleColumns]
+  );
+
+  const sortedVisibleColumns = React.useMemo(
+    () => [...leftPinnedColumns, ...centerColumns, ...rightPinnedColumns],
+    [centerColumns, leftPinnedColumns, rightPinnedColumns]
+  );
+
+  const [columnWidths, setColumnWidths] = React.useState<Record<string, number>>(
+    {}
+  );
+  const [resizingColumn, setResizingColumn] = React.useState<{
+    columnId: string;
+    startX: number;
+    startWidth: number;
+  } | null>(null);
 
   const resolveRowId = React.useCallback(
     (row: T, index: number): RowId => {
@@ -169,7 +204,7 @@ export function DataTable<T extends object>({
   }, [enableRowSelection, effectiveSelectedRowIds, resolvedRowIds]);
 
   const resolvedColumnCount = Math.max(
-    visibleColumns.length +
+    sortedVisibleColumns.length +
       (enableRowSelection ? 1 : 0) +
       (rowActions.length > 0 ? 1 : 0),
     1
@@ -195,14 +230,25 @@ export function DataTable<T extends object>({
         return;
       }
 
-      const activeColumn = visibleColumns.find((column) => column.id === activeId);
-      const overColumn = visibleColumns.find((column) => column.id === overId);
+      const activeColumn = sortedVisibleColumns.find(
+        (column) => column.id === activeId
+      );
+      const overColumn = sortedVisibleColumns.find((column) => column.id === overId);
 
       if (!activeColumn || !overColumn) {
         return;
       }
 
-      if (activeColumn.isDraggable === false || overColumn.isDraggable === false) {
+      if (
+        activeColumn.isDraggable === false ||
+        overColumn.isDraggable === false ||
+        activeColumn.pin === "left" ||
+        activeColumn.pin === "right"
+      ) {
+        return;
+      }
+
+      if (overColumn.pin === "left" || overColumn.pin === "right") {
         return;
       }
 
@@ -214,7 +260,165 @@ export function DataTable<T extends object>({
         return nextOrder;
       });
     },
-    [onColumnOrderChange, visibleColumns]
+    [onColumnOrderChange, sortedVisibleColumns]
+  );
+
+  const handleResizeStart = React.useCallback(
+    (columnId: string, startX: number, startWidth: number) => {
+      setResizingColumn({
+        columnId,
+        startX,
+        startWidth,
+      });
+    },
+    []
+  );
+
+  React.useEffect(() => {
+    if (!resizingColumn) {
+      return;
+    }
+
+    const handleMouseMove = (event: MouseEvent) => {
+      const column = sortedVisibleColumns.find(
+        (candidate) => candidate.id === resizingColumn.columnId
+      );
+      if (!column) {
+        return;
+      }
+
+      const delta = event.clientX - resizingColumn.startX;
+      const minWidth = column.minWidth ?? 80;
+      const maxWidth =
+        typeof column.maxWidth === "number"
+          ? column.maxWidth
+          : Number.POSITIVE_INFINITY;
+      const unclampedWidth = resizingColumn.startWidth + delta;
+      const nextWidth = Math.min(maxWidth, Math.max(minWidth, unclampedWidth));
+
+      setColumnWidths((current) => {
+        if (current[resizingColumn.columnId] === nextWidth) {
+          return current;
+        }
+        return {
+          ...current,
+          [resizingColumn.columnId]: nextWidth,
+        };
+      });
+
+      if (onColumnResize) {
+        onColumnResize(resizingColumn.columnId, nextWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setResizingColumn(null);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [onColumnResize, resizingColumn, sortedVisibleColumns]);
+
+  const handleColumnWidthMeasure = React.useCallback(
+    (columnId: string, width: number) => {
+      if (!Number.isFinite(width) || width <= 0) {
+        return;
+      }
+
+      const roundedWidth = Math.round(width);
+      setColumnWidths((current) => {
+        if (current[columnId] === roundedWidth) {
+          return current;
+        }
+
+        return {
+          ...current,
+          [columnId]: roundedWidth,
+        };
+      });
+    },
+    []
+  );
+
+  const hasLeftPinnedColumns = leftPinnedColumns.length > 0;
+  const hasRightPinnedColumns = rightPinnedColumns.length > 0;
+
+  const stickySelectionColumn = enableRowSelection && hasLeftPinnedColumns;
+  const stickyRowActionsColumn = rowActions.length > 0 && hasRightPinnedColumns;
+
+  const getEffectiveColumnWidth = React.useCallback(
+    (columnId: string) => {
+      const measuredWidth = columnWidths[columnId];
+      if (typeof measuredWidth === "number" && measuredWidth > 0) {
+        return measuredWidth;
+      }
+
+      const column = sortedVisibleColumns.find((candidate) => candidate.id === columnId);
+      if (!column) {
+        return 140;
+      }
+
+      return column.minWidth ?? 140;
+    },
+    [columnWidths, sortedVisibleColumns]
+  );
+
+  const leftPinnedOffsets = React.useMemo(() => {
+    const offsets: Record<string, number> = {};
+    let nextLeftOffset = stickySelectionColumn ? UTILITY_COLUMN_WIDTH : 0;
+
+    leftPinnedColumns.forEach((column) => {
+      offsets[column.id] = nextLeftOffset;
+      nextLeftOffset += getEffectiveColumnWidth(column.id);
+    });
+
+    return offsets;
+  }, [getEffectiveColumnWidth, leftPinnedColumns, stickySelectionColumn]);
+
+  const rightPinnedOffsets = React.useMemo(() => {
+    const offsets: Record<string, number> = {};
+    let nextRightOffset = stickyRowActionsColumn ? UTILITY_COLUMN_WIDTH : 0;
+
+    [...rightPinnedColumns].reverse().forEach((column) => {
+      offsets[column.id] = nextRightOffset;
+      nextRightOffset += getEffectiveColumnWidth(column.id);
+    });
+
+    return offsets;
+  }, [getEffectiveColumnWidth, rightPinnedColumns, stickyRowActionsColumn]);
+
+  const getPinnedStyleForColumn = React.useCallback(
+    (columnId: string): React.CSSProperties => {
+      if (Object.prototype.hasOwnProperty.call(leftPinnedOffsets, columnId)) {
+        return {
+          position: "sticky",
+          left: `${leftPinnedOffsets[columnId]}px`,
+          zIndex: 20,
+          backgroundColor: "inherit",
+        };
+      }
+
+      if (Object.prototype.hasOwnProperty.call(rightPinnedOffsets, columnId)) {
+        return {
+          position: "sticky",
+          right: `${rightPinnedOffsets[columnId]}px`,
+          zIndex: 20,
+          backgroundColor: "inherit",
+        };
+      }
+
+      return {};
+    },
+    [leftPinnedOffsets, rightPinnedOffsets]
   );
 
   return (
@@ -232,13 +436,21 @@ export function DataTable<T extends object>({
       >
         <table className={cn("w-full min-w-max border-collapse text-sm", classNames?.table)}>
           <DataTableHeader
-            columns={visibleColumns}
+            columns={sortedVisibleColumns}
             classNames={classNames}
             enableRowSelection={enableRowSelection}
             headerSelectionState={headerSelectionState}
             onToggleSelectAll={handleToggleSelectAll}
             showRowActionsColumn={rowActions.length > 0}
             columnActions={columnActions}
+            columnWidths={columnWidths}
+            resizingColumnId={resizingColumn?.columnId ?? null}
+            onResizeStart={handleResizeStart}
+            onColumnWidthMeasure={handleColumnWidthMeasure}
+            leftPinnedOffsets={leftPinnedOffsets}
+            rightPinnedOffsets={rightPinnedOffsets}
+            stickySelectionColumn={stickySelectionColumn}
+            stickyRowActionsColumn={stickyRowActionsColumn}
           />
 
           <tbody className={cn(classNames?.tbody)}>
@@ -249,22 +461,52 @@ export function DataTable<T extends object>({
                     className={cn(classNames?.loadingRow)}
                   >
                     {enableRowSelection ? (
-                      <DataTableCell className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}>
+                      <DataTableCell
+                        className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}
+                        style={
+                          stickySelectionColumn
+                            ? {
+                                position: "sticky",
+                                left: "0px",
+                                zIndex: 25,
+                                backgroundColor: "inherit",
+                              }
+                            : undefined
+                        }
+                      >
                         <div className="h-4 w-4 animate-pulse rounded bg-zinc-200" />
                       </DataTableCell>
                     ) : null}
-                    {visibleColumns.map((column) => (
+                    {sortedVisibleColumns.map((column) => (
                       <DataTableCell
                         key={`loading-${column.id}-${index}`}
                         minWidth={column.minWidth}
                         maxWidth={column.maxWidth}
+                        style={{
+                          width: columnWidths[column.id]
+                            ? `${columnWidths[column.id]}px`
+                            : undefined,
+                          ...getPinnedStyleForColumn(column.id),
+                        }}
                         className={cn(classNames?.cell)}
                       >
                         {column.skeleton ?? defaultSkeletonCell()}
                       </DataTableCell>
                     ))}
                     {rowActions.length > 0 ? (
-                      <DataTableCell className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}>
+                      <DataTableCell
+                        className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}
+                        style={
+                          stickyRowActionsColumn
+                            ? {
+                                position: "sticky",
+                                right: "0px",
+                                zIndex: 25,
+                                backgroundColor: "inherit",
+                              }
+                            : undefined
+                        }
+                      >
                         <div className="h-4 w-4 animate-pulse rounded bg-zinc-200" />
                       </DataTableCell>
                     ) : null}
@@ -295,7 +537,19 @@ export function DataTable<T extends object>({
                       className={cn(classNames?.row, isSelected ? "bg-zinc-50" : undefined)}
                     >
                       {enableRowSelection ? (
-                        <DataTableCell className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}>
+                        <DataTableCell
+                          className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}
+                          style={
+                            stickySelectionColumn
+                              ? {
+                                  position: "sticky",
+                                  left: "0px",
+                                  zIndex: 25,
+                                  backgroundColor: "inherit",
+                                }
+                              : undefined
+                          }
+                        >
                           <div className="flex items-center justify-center">
                             <Checkbox
                               checked={isSelected}
@@ -307,11 +561,17 @@ export function DataTable<T extends object>({
                           </div>
                         </DataTableCell>
                       ) : null}
-                      {visibleColumns.map((column) => (
+                      {sortedVisibleColumns.map((column) => (
                         <DataTableCell
                           key={`${String(rowId)}-${column.id}`}
                           minWidth={column.minWidth}
                           maxWidth={column.maxWidth}
+                          style={{
+                            width: columnWidths[column.id]
+                              ? `${columnWidths[column.id]}px`
+                              : undefined,
+                            ...getPinnedStyleForColumn(column.id),
+                          }}
                           className={cn(classNames?.cell)}
                         >
                           <EditableCellRenderer
@@ -323,7 +583,19 @@ export function DataTable<T extends object>({
                         </DataTableCell>
                       ))}
                       {rowActions.length > 0 ? (
-                        <DataTableCell className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}>
+                        <DataTableCell
+                          className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}
+                          style={
+                            stickyRowActionsColumn
+                              ? {
+                                  position: "sticky",
+                                  right: "0px",
+                                  zIndex: 25,
+                                  backgroundColor: "inherit",
+                                }
+                              : undefined
+                          }
+                        >
                           <div className="flex items-center justify-center">
                             <RowActionsMenu row={row} rowId={rowId} actions={rowActions} />
                           </div>

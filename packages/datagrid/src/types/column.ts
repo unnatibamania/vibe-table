@@ -34,6 +34,7 @@ interface BaseDataTableColumn<T> {
   header: React.ReactNode;
   minWidth?: number;
   maxWidth?: number;
+  pin?: "left" | "right" | null;
   isResizable?: boolean;
   isHidden?: boolean;
   isVisible?: boolean;

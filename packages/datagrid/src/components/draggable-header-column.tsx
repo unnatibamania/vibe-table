@@ -14,17 +14,30 @@ interface DraggableHeaderColumnProps<T extends object> {
   column: NormalizedDataTableColumn<T>;
   className?: string;
   columnActions: DataTableColumnAction<T>[];
+  width?: number;
+  isResizing?: boolean;
+  onResizeStart?: (columnId: string, startX: number, startWidth: number) => void;
+  onColumnWidthMeasure?: (columnId: string, width: number) => void;
+  pinSide?: "left" | "right" | null;
+  pinOffset?: number;
 }
 
 export function DraggableHeaderColumn<T extends object>({
   column,
   className,
   columnActions,
+  width,
+  isResizing = false,
+  onResizeStart,
+  onColumnWidthMeasure,
+  pinSide = null,
+  pinOffset = 0,
 }: DraggableHeaderColumnProps<T>) {
   const columnRef = React.useRef<HTMLTableCellElement | null>(null);
   const [columnWidth, setColumnWidth] = React.useState<number | null>(null);
 
-  const isDraggable = column.isDraggable !== false;
+  const isPinned = pinSide === "left" || pinSide === "right";
+  const isDraggable = !isPinned && column.isDraggable !== false;
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
@@ -45,8 +58,17 @@ export function DraggableHeaderColumn<T extends object>({
       return;
     }
     const nextWidth = columnRef.current.getBoundingClientRect().width;
+    if (nextWidth > 0) {
+      onColumnWidthMeasure?.(column.id, nextWidth);
+    }
     setColumnWidth(nextWidth);
-  }, [column.id, isDragging]);
+  }, [column.id, isDragging, onColumnWidthMeasure]);
+
+  const isResizable = column.isResizable !== false;
+  const effectiveWidth = width ?? columnWidth;
+  const isPinnedLeft = pinSide === "left";
+  const isPinnedRight = pinSide === "right";
+  const pinnedOffset = pinOffset ?? 0;
 
   const style: React.CSSProperties = {
     transform: transform
@@ -58,19 +80,32 @@ export function DraggableHeaderColumn<T extends object>({
         })
       : undefined,
     transition,
-    position: "relative",
-    zIndex: isDragging ? 10 : undefined,
-    width: columnWidth ? `${columnWidth}px` : undefined,
+    position: isPinned ? "sticky" : "relative",
+    left: isPinnedLeft ? `${pinnedOffset}px` : undefined,
+    right: isPinnedRight ? `${pinnedOffset}px` : undefined,
+    zIndex: isDragging ? 40 : isPinned ? 30 : undefined,
+    backgroundColor: isPinned ? "rgb(250 250 250)" : undefined,
   };
+
+  if (effectiveWidth && effectiveWidth > 0) {
+    style.width = `${effectiveWidth}px`;
+    style.minWidth = `${effectiveWidth}px`;
+    style.maxWidth = `${effectiveWidth}px`;
+  }
 
   return (
     <DataTableColumn
       ref={setRefs}
       minWidth={column.minWidth}
       maxWidth={column.maxWidth}
-      className={cn(className, isDragging ? "bg-zinc-100/70" : undefined)}
+      className={cn(
+        className,
+        isPinned ? "bg-zinc-50" : undefined,
+        isDragging ? "bg-zinc-100/70 shadow-md" : undefined
+      )}
       style={style}
       data-draggable={isDraggable ? "true" : "false"}
+      data-pin-side={pinSide ?? undefined}
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-1">
@@ -92,6 +127,28 @@ export function DraggableHeaderColumn<T extends object>({
           <ColumnActionsMenu column={column} actions={columnActions} />
         )}
       </div>
+      {isResizable ? (
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label={`Resize column ${column.label}`}
+          data-testid={`resize-handle-${column.id}`}
+          className={cn(
+            "absolute right-0 top-0 h-full w-1 cursor-col-resize bg-transparent transition-colors hover:bg-zinc-300",
+            isResizing ? "bg-zinc-400" : undefined
+          )}
+          onMouseDown={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const measuredWidth = columnRef.current?.getBoundingClientRect().width;
+            const startWidth =
+              measuredWidth && measuredWidth > 0
+                ? measuredWidth
+                : (width ?? column.minWidth ?? 120);
+            onResizeStart?.(column.id, event.clientX, startWidth);
+          }}
+        />
+      ) : null}
     </DataTableColumn>
   );
 }

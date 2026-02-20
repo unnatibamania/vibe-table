@@ -85,6 +85,7 @@ const columns: DataTableColumnConfig<DemoRow>[] = [
     ),
     minWidth: 140,
     maxWidth: 190,
+    // pin: "left",
     isResizable: false,
     isHidden: false,
     isDraggable: false,
@@ -174,6 +175,7 @@ const columns: DataTableColumnConfig<DemoRow>[] = [
     label: "Rating",
     header: "Rating",
     minWidth: 170,
+    // pin: "right",
     isEditable: true,
     type: "rating",
     maxRating: 5,
@@ -189,6 +191,7 @@ export default function Home() {
   const [columnOrder, setColumnOrder] = React.useState<string[]>(
     columns.map((column) => column.id)
   );
+  const [lastResize, setLastResize] = React.useState<string>("none");
 
   const handleCellChange = React.useCallback(
     (rowId: string | number, columnId: string, newValue: unknown) => {
@@ -246,10 +249,10 @@ export default function Home() {
 
   return (
     <main className="mx-auto max-w-7xl p-8">
-      <h1 className="mb-4 text-2xl font-semibold">DataTable Step 2 Demo</h1>
+      <h1 className="mb-4 text-2xl font-semibold">DataTable Step 7 Demo</h1>
       <p className="mb-6 text-sm text-zinc-600">
         Editable cells are enabled for text, number, boolean, date, select,
-        multi-select, toggle, and rating types.
+        multi-select, toggle, and rating types with pinned columns support.
       </p>
       <p className="mb-4 text-sm text-zinc-600">
         Selected rows: {selectedRowIds.size}
@@ -258,6 +261,7 @@ export default function Home() {
       <p className="mb-4 text-sm text-zinc-600">
         Column order: {columnOrder.join(" > ")}
       </p>
+      <p className="mb-4 text-sm text-zinc-600">Last resize: {lastResize}</p>
       <DataTable
         rows={rows}
         columns={columns}
@@ -268,6 +272,9 @@ export default function Home() {
         rowActions={rowActions}
         columnActions={columnActions}
         onColumnOrderChange={setColumnOrder}
+        onColumnResize={(columnId, width) =>
+          setLastResize(`${columnId}: ${Math.round(width)}px`)
+        }
       />
     </main>
   );

@@ -49,8 +49,8 @@ describe("DataTable", () => {
   it("renders headers and row data", () => {
     render(<DataTable rows={rows} columns={baseColumns} />);
 
-    expect(screen.getByRole("columnheader", { name: "Name" })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: "Age" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: /Name/ })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: /Age/ })).toBeInTheDocument();
     expect(screen.getByText("Alice")).toBeInTheDocument();
     expect(screen.getByText("Bob")).toBeInTheDocument();
   });
@@ -87,17 +87,17 @@ describe("DataTable", () => {
 
     render(<DataTable rows={rows} columns={columns} />);
 
-    expect(screen.queryByRole("columnheader", { name: "Hidden A" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("columnheader", { name: "Hidden B" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: /Hidden A/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: /Hidden B/ })).not.toBeInTheDocument();
     expect(
-      screen.getByRole("columnheader", { name: "Visible Override" })
+      screen.getByRole("columnheader", { name: /Visible Override/ })
     ).toBeInTheDocument();
   });
 
   it("applies minWidth and maxWidth styles to header and cells", () => {
     render(<DataTable rows={rows} columns={baseColumns} />);
 
-    const header = screen.getByRole("columnheader", { name: "Name" });
+    const header = screen.getByRole("columnheader", { name: /Name/ });
     expect(header).toHaveStyle({ minWidth: "120px", maxWidth: "220px" });
 
     const cell = screen.getByText("Alice").closest("td");
@@ -357,5 +357,143 @@ describe("DataTable", () => {
 
     expect(screen.getByTestId("drag-handle-name")).toBeInTheDocument();
     expect(screen.queryByTestId("drag-handle-age")).not.toBeInTheDocument();
+  });
+
+  it("keeps pinned columns at the left and right edges", () => {
+    const columns: DataTableColumn<Row>[] = [
+      {
+        id: "name",
+        label: "Name",
+        header: "Name",
+        type: "text",
+      },
+      {
+        id: "age",
+        label: "Age",
+        header: "Age",
+        type: "number",
+        pin: "right",
+        minWidth: 120,
+      },
+      {
+        id: "status",
+        label: "Status",
+        header: "Status",
+        type: "text",
+        pin: "left",
+        minWidth: 100,
+      },
+    ];
+
+    render(<DataTable rows={rows} columns={columns} />);
+
+    const headers = screen.getAllByRole("columnheader");
+    expect(headers[0]).toHaveTextContent("Status");
+    expect(headers[1]).toHaveTextContent("Name");
+    expect(headers[2]).toHaveTextContent("Age");
+
+    expect(headers[0]).toHaveStyle({ position: "sticky", left: "0px" });
+    expect(headers[2]).toHaveStyle({ position: "sticky", right: "0px" });
+    expect(screen.queryByTestId("drag-handle-status")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("drag-handle-age")).not.toBeInTheDocument();
+  });
+
+  it("computes cumulative left offsets for multiple pinned columns", () => {
+    const columns: DataTableColumn<Row>[] = [
+      {
+        id: "a",
+        label: "A",
+        header: "A",
+        type: "text",
+        pin: "left",
+        minWidth: 90,
+        cell: () => "a",
+      },
+      {
+        id: "b",
+        label: "B",
+        header: "B",
+        type: "text",
+        pin: "left",
+        minWidth: 110,
+        cell: () => "b",
+      },
+      {
+        id: "name",
+        label: "Name",
+        header: "Name",
+        type: "text",
+      },
+    ];
+
+    render(<DataTable rows={rows} columns={columns} />);
+
+    const headerA = screen.getByRole("columnheader", { name: /A/ });
+    const headerB = screen.getByRole("columnheader", { name: /B/ });
+
+    expect(headerA).toHaveStyle({ left: "0px" });
+    expect(headerB).toHaveStyle({ left: "90px" });
+  });
+
+  it("renders resize handles only for resizable columns", () => {
+    const columns: DataTableColumn<Row>[] = [
+      {
+        id: "name",
+        label: "Name",
+        header: "Name",
+        type: "text",
+        isResizable: true,
+      },
+      {
+        id: "age",
+        label: "Age",
+        header: "Age",
+        type: "number",
+        isResizable: false,
+      },
+    ];
+
+    render(<DataTable rows={rows} columns={columns} />);
+
+    expect(screen.getByTestId("resize-handle-name")).toBeInTheDocument();
+    expect(screen.queryByTestId("resize-handle-age")).not.toBeInTheDocument();
+  });
+
+  it("resizes columns with min/max clamping and emits onColumnResize", () => {
+    const onColumnResize = vi.fn();
+    const columns: DataTableColumn<Row>[] = [
+      {
+        id: "name",
+        label: "Name",
+        header: "Name",
+        type: "text",
+        minWidth: 100,
+        maxWidth: 150,
+        isResizable: true,
+      },
+    ];
+
+    render(
+      <DataTable rows={rows} columns={columns} onColumnResize={onColumnResize} />
+    );
+
+    const resizeHandle = screen.getByTestId("resize-handle-name");
+    fireEvent.mouseDown(resizeHandle, { clientX: 100 });
+    fireEvent.mouseMove(document, { clientX: 180 });
+    fireEvent.mouseUp(document);
+
+    expect(onColumnResize).toHaveBeenCalledWith("name", 150);
+
+    const headerCell = screen
+      .getByTestId("drag-handle-name")
+      .closest("th") as HTMLTableCellElement;
+    expect(headerCell).toHaveStyle({ width: "150px" });
+
+    fireEvent.mouseDown(resizeHandle, { clientX: 150 });
+    fireEvent.mouseMove(document, { clientX: -100 });
+    fireEvent.mouseUp(document);
+
+    expect(onColumnResize).toHaveBeenLastCalledWith("name", 100);
+    expect(headerCell).toHaveStyle({ width: "100px" });
   });
 });
