@@ -1,6 +1,7 @@
 "use client";
 
 import { MoreHorizontal } from "lucide-react";
+import { cn } from "../lib/cn";
 import type { DataTableRowAction } from "../types/actions";
 import type { RowId } from "../types/table";
 import { Button } from "./ui/button";
@@ -15,12 +16,14 @@ interface RowActionsMenuProps<T extends object> {
   row: T;
   rowId: RowId;
   actions: DataTableRowAction<T>[];
+  triggerClassName?: string;
 }
 
 export function RowActionsMenu<T extends object>({
   row,
   rowId,
   actions,
+  triggerClassName,
 }: RowActionsMenuProps<T>) {
   if (actions.length === 0) {
     return null;
@@ -32,7 +35,7 @@ export function RowActionsMenu<T extends object>({
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7"
+          className={cn("h-7 w-7", triggerClassName)}
           aria-label={`Row actions for ${String(rowId)}`}
           data-testid={`row-actions-trigger-${String(rowId)}`}
         >

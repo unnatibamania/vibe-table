@@ -1,6 +1,7 @@
 "use client";
 
 import { MoreHorizontal } from "lucide-react";
+import { cn } from "../lib/cn";
 import type { DataTableColumnAction } from "../types/actions";
 import type { NormalizedDataTableColumn } from "../types/column";
 import { Button } from "./ui/button";
@@ -14,11 +15,13 @@ import {
 interface ColumnActionsMenuProps<T extends object> {
   column: NormalizedDataTableColumn<T>;
   actions: DataTableColumnAction<T>[];
+  triggerClassName?: string;
 }
 
 export function ColumnActionsMenu<T extends object>({
   column,
   actions,
+  triggerClassName,
 }: ColumnActionsMenuProps<T>) {
   if (actions.length === 0) {
     return null;
@@ -30,7 +33,7 @@ export function ColumnActionsMenu<T extends object>({
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7"
+          className={cn("h-7 w-7", triggerClassName)}
           aria-label={`Column actions for ${column.label}`}
           data-testid={`column-actions-trigger-${column.id}`}
         >

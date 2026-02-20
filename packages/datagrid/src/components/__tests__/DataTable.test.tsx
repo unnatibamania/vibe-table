@@ -388,6 +388,37 @@ describe("DataTable", () => {
     expect(onColumnAction).toHaveBeenCalledWith("name");
   });
 
+  it("applies advanced class slot overrides", () => {
+    render(
+      <DataTable
+        rows={rows}
+        columns={baseColumns}
+        rowActions={[
+          {
+            label: "Edit row",
+            value: "edit",
+            action: () => undefined,
+          },
+        ]}
+        classNames={{
+          dragHandle: "slot-drag-handle",
+          selectionCell: "slot-selection-cell",
+          rowActionsCell: "slot-row-actions-cell",
+        }}
+        enableRowSelection
+      />
+    );
+
+    expect(screen.getByTestId("drag-handle-name")).toHaveClass("slot-drag-handle");
+    expect(screen.getByLabelText("Select row 1").closest("td")).toHaveClass(
+      "slot-selection-cell"
+    );
+    const rowActionCell = screen
+      .getByTestId("row-actions-trigger-1")
+      .closest("td") as HTMLTableCellElement;
+    expect(rowActionCell).toHaveClass("slot-row-actions-cell");
+  });
+
   it("renders group headers as full rows when grouped by a column", () => {
     const columns: DataTableColumn<Row>[] = [
       {

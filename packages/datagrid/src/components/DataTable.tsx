@@ -931,7 +931,10 @@ export function DataTable<T extends object>({
                     >
                       {enableRowSelection ? (
                         <DataTableCell
-                          className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}
+                          className={cn(
+                            "w-11 min-w-11 max-w-11 px-2 py-2",
+                            classNames?.selectionCell
+                          )}
                           style={
                             stickySelectionColumn
                               ? {
@@ -964,7 +967,10 @@ export function DataTable<T extends object>({
                       ))}
                       {rowActions.length > 0 ? (
                         <DataTableCell
-                          className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}
+                          className={cn(
+                            "w-11 min-w-11 max-w-11 px-2 py-2",
+                            classNames?.rowActionsCell
+                          )}
                           style={
                             stickyRowActionsColumn
                               ? {
@@ -1047,7 +1053,10 @@ export function DataTable<T extends object>({
                       >
                         {enableRowSelection ? (
                           <DataTableCell
-                            className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}
+                            className={cn(
+                              "w-11 min-w-11 max-w-11 px-2 py-2",
+                              classNames?.selectionCell
+                            )}
                             style={
                               stickySelectionColumn
                                 ? {
@@ -1093,7 +1102,10 @@ export function DataTable<T extends object>({
                         ))}
                         {rowActions.length > 0 ? (
                           <DataTableCell
-                            className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}
+                            className={cn(
+                              "w-11 min-w-11 max-w-11 px-2 py-2",
+                              classNames?.rowActionsCell
+                            )}
                             style={
                               stickyRowActionsColumn
                                 ? {
@@ -1106,7 +1118,12 @@ export function DataTable<T extends object>({
                             }
                           >
                             <div className="flex items-center justify-center">
-                              <RowActionsMenu row={row} rowId={rowId} actions={rowActions} />
+                              <RowActionsMenu
+                                row={row}
+                                rowId={rowId}
+                                actions={rowActions}
+                                triggerClassName={classNames?.rowActionsTrigger}
+                              />
                             </div>
                           </DataTableCell>
                         ) : null}
@@ -1122,7 +1139,7 @@ export function DataTable<T extends object>({
         <DropdownMenuContent
           align="start"
           sideOffset={2}
-          className="min-w-44"
+          className={cn("min-w-44", classNames?.contextMenuContent)}
           onCloseAutoFocus={(event) => event.preventDefault()}
         >
           {contextMenuState.kind === "row"
@@ -1136,7 +1153,7 @@ export function DataTable<T extends object>({
                     });
                     setContextMenuState(null);
                   }}
-                  className="cursor-pointer"
+                  className={cn("cursor-pointer", classNames?.contextMenuItem)}
                 >
                   {action.icon ? (
                     <span className="mr-2 inline-flex">{action.icon}</span>
@@ -1153,7 +1170,7 @@ export function DataTable<T extends object>({
                     });
                     setContextMenuState(null);
                   }}
-                  className="cursor-pointer"
+                  className={cn("cursor-pointer", classNames?.contextMenuItem)}
                 >
                   {action.icon ? (
                     <span className="mr-2 inline-flex">{action.icon}</span>

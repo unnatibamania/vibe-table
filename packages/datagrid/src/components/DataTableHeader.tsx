@@ -39,7 +39,10 @@ export function DataTableHeader<T extends object>({
         <DataTableRow className={cn("h-11", classNames?.headerRow)}>
           {enableRowSelection ? (
             <DataTableColumn
-              className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}
+              className={cn(
+                "w-11 min-w-11 max-w-11 px-2 py-2",
+                classNames?.selectionHeaderCell
+              )}
               style={
                 stickySelectionColumn
                   ? {
@@ -83,12 +86,16 @@ export function DataTableHeader<T extends object>({
                 sortState?.columnId === column.id ? sortState.direction : null
               }
               onSortToggle={onSortToggle}
+              classNames={classNames}
               onColumnContextMenu={onColumnContextMenu}
             />
           ))}
           {showRowActionsColumn ? (
             <DataTableColumn
-              className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}
+              className={cn(
+                "w-11 min-w-11 max-w-11 px-2 py-2",
+                classNames?.rowActionsHeaderCell
+              )}
               style={
                 stickyRowActionsColumn
                   ? {

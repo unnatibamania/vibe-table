@@ -7,6 +7,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown, GripVertical } from "lucide-react";
 import { cn } from "../lib/cn";
 import type { DataTableColumnAction } from "../types/actions";
 import type { NormalizedDataTableColumn } from "../types/column";
+import type { DataTableClassNames } from "../types/class-names";
 import type { DataTableSortDirection } from "../types/table";
 import { ColumnActionsMenu } from "./column-actions-menu";
 import { DataTableColumn } from "./DataTableColumn";
@@ -24,6 +25,7 @@ interface DraggableHeaderColumnProps<T extends object> {
   isSortable?: boolean;
   sortDirection?: DataTableSortDirection | null;
   onSortToggle?: (columnId: string) => void;
+  classNames?: DataTableClassNames;
   onColumnContextMenu?: (
     event: React.MouseEvent,
     column: NormalizedDataTableColumn<T>
@@ -43,6 +45,7 @@ export function DraggableHeaderColumn<T extends object>({
   isSortable = false,
   sortDirection = null,
   onSortToggle,
+  classNames,
   onColumnContextMenu,
 }: DraggableHeaderColumnProps<T>) {
   const columnRef = React.useRef<HTMLTableCellElement | null>(null);
@@ -142,7 +145,10 @@ export function DraggableHeaderColumn<T extends object>({
           {isDraggable ? (
             <button
               type="button"
-              className="inline-flex h-5 w-5 cursor-grab touch-none items-center justify-center rounded text-zinc-500 hover:bg-zinc-200 active:cursor-grabbing"
+              className={cn(
+                "inline-flex h-5 w-5 cursor-grab touch-none items-center justify-center rounded text-zinc-500 hover:bg-zinc-200 active:cursor-grabbing",
+                classNames?.dragHandle
+              )}
               aria-label={`Drag column ${column.label}`}
               data-testid={`drag-handle-${column.id}`}
               {...attributes}
@@ -154,7 +160,10 @@ export function DraggableHeaderColumn<T extends object>({
           {isSortable ? (
             <button
               type="button"
-              className="inline-flex min-w-0 items-center gap-2 rounded px-1 py-0.5 text-left hover:bg-zinc-100"
+              className={cn(
+                "inline-flex min-w-0 items-center gap-2 rounded px-1 py-0.5 text-left hover:bg-zinc-100",
+                classNames?.sortTrigger
+              )}
               onClick={() => onSortToggle?.(column.id)}
               data-testid={`sort-trigger-${column.id}`}
             >
@@ -166,7 +175,11 @@ export function DraggableHeaderColumn<T extends object>({
           )}
         </div>
         {column.showColumnActions === false ? null : (
-          <ColumnActionsMenu column={column} actions={columnActions} />
+          <ColumnActionsMenu
+            column={column}
+            actions={columnActions}
+            triggerClassName={classNames?.columnActionsTrigger}
+          />
         )}
       </div>
       {isResizable ? (
@@ -177,7 +190,8 @@ export function DraggableHeaderColumn<T extends object>({
           data-testid={`resize-handle-${column.id}`}
           className={cn(
             "absolute right-0 top-0 h-full w-1 cursor-col-resize bg-transparent transition-colors hover:bg-zinc-300",
-            isResizing ? "bg-zinc-400" : undefined
+            isResizing ? "bg-zinc-400" : undefined,
+            classNames?.resizeHandle
           )}
           onMouseDown={(event) => {
             event.preventDefault();

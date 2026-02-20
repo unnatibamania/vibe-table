@@ -346,6 +346,7 @@ export default function Home() {
         onColumnResize={(columnId, width) =>
           setLastResize(`${columnId}: ${Math.round(width)}px`)
         }
+        
         sortState={sortState}
         onSortChange={setSortState}
         groupByColumnId={groupByColumnId}
