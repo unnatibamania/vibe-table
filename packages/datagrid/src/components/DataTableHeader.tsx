@@ -28,6 +28,7 @@ export function DataTableHeader<T extends object>({
   stickyRowActionsColumn = false,
   sortState = null,
   onSortToggle,
+  onColumnContextMenu,
 }: DataTableHeaderProps<T>) {
   return (
     <thead className={cn("bg-zinc-50", classNames?.thead)}>
@@ -82,6 +83,7 @@ export function DataTableHeader<T extends object>({
                 sortState?.columnId === column.id ? sortState.direction : null
               }
               onSortToggle={onSortToggle}
+              onColumnContextMenu={onColumnContextMenu}
             />
           ))}
           {showRowActionsColumn ? (

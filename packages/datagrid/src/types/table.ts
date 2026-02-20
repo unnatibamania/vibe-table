@@ -74,6 +74,10 @@ export interface DataTableHeaderProps<T extends object> {
   stickyRowActionsColumn?: boolean;
   sortState?: DataTableSortState | null;
   onSortToggle?: (columnId: string) => void;
+  onColumnContextMenu?: (
+    event: React.MouseEvent,
+    column: NormalizedDataTableColumn<T>
+  ) => void;
 }
 
 export interface DataTableColumnProps

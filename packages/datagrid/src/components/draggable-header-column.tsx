@@ -24,6 +24,10 @@ interface DraggableHeaderColumnProps<T extends object> {
   isSortable?: boolean;
   sortDirection?: DataTableSortDirection | null;
   onSortToggle?: (columnId: string) => void;
+  onColumnContextMenu?: (
+    event: React.MouseEvent,
+    column: NormalizedDataTableColumn<T>
+  ) => void;
 }
 
 export function DraggableHeaderColumn<T extends object>({
@@ -39,6 +43,7 @@ export function DraggableHeaderColumn<T extends object>({
   isSortable = false,
   sortDirection = null,
   onSortToggle,
+  onColumnContextMenu,
 }: DraggableHeaderColumnProps<T>) {
   const columnRef = React.useRef<HTMLTableCellElement | null>(null);
   const [columnWidth, setColumnWidth] = React.useState<number | null>(null);
@@ -130,6 +135,7 @@ export function DraggableHeaderColumn<T extends object>({
       data-draggable={isDraggable ? "true" : "false"}
       data-pin-side={pinSide ?? undefined}
       aria-sort={ariaSortValue as React.AriaAttributes["aria-sort"]}
+      onContextMenu={(event) => onColumnContextMenu?.(event, column)}
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-1">

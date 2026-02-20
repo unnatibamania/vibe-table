@@ -335,6 +335,58 @@ describe("DataTable", () => {
     expect(onColumnAction).toHaveBeenCalledWith("name");
   });
 
+  it("calls row action handlers from right-click row context menu", async () => {
+    const user = userEvent.setup();
+    const onRowAction = vi.fn();
+
+    render(
+      <DataTable
+        rows={rows}
+        columns={baseColumns}
+        rowActions={[
+          {
+            label: "Edit row",
+            value: "edit",
+            action: (row) => onRowAction(row.id),
+          },
+        ]}
+      />
+    );
+
+    fireEvent.contextMenu(screen.getByText("Alice").closest("tr") as HTMLElement);
+    await user.click(await screen.findByText("Edit row"));
+
+    expect(onRowAction).toHaveBeenCalledWith(1);
+  });
+
+  it("calls column action handlers from right-click header context menu", async () => {
+    const user = userEvent.setup();
+    const onColumnAction = vi.fn();
+
+    render(
+      <DataTable
+        rows={rows}
+        columns={baseColumns}
+        columnActions={[
+          {
+            label: "Inspect column",
+            value: "inspect",
+            action: (column) => onColumnAction(column.id),
+          },
+        ]}
+      />
+    );
+
+    fireEvent.contextMenu(
+      screen.getByRole("columnheader", {
+        name: /Name/,
+      })
+    );
+    await user.click(await screen.findByText("Inspect column"));
+
+    expect(onColumnAction).toHaveBeenCalledWith("name");
+  });
+
   it("renders drag handles for draggable columns and hides when disabled", () => {
     const columns: DataTableColumn<Row>[] = [
       {

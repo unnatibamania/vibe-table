@@ -6,6 +6,7 @@ import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import { cn } from "../lib/cn";
 import { mergeColumnOrder, reorderColumnIds } from "../lib/column-order";
 import { normalizeColumns } from "../lib/normalize-columns";
+import type { NormalizedDataTableColumn } from "../types/column";
 import type { DataTableProps, DataTableSortState, RowId } from "../types/table";
 import { EditableCellRenderer } from "./cell-editors";
 import { DataTableCell } from "./DataTableCell";
@@ -13,12 +14,34 @@ import { DataTableHeader } from "./DataTableHeader";
 import { DataTableRow } from "./DataTableRow";
 import { RowActionsMenu } from "./row-actions-menu";
 import { Checkbox } from "./ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 function defaultSkeletonCell() {
   return <div className="h-4 w-full animate-pulse rounded bg-zinc-200" />;
 }
 
 const UTILITY_COLUMN_WIDTH = 44;
+
+type DataTableContextMenuState<T extends object> =
+  | {
+      kind: "row";
+      x: number;
+      y: number;
+      row: T;
+      rowId: RowId;
+    }
+  | {
+      kind: "column";
+      x: number;
+      y: number;
+      column: NormalizedDataTableColumn<T>;
+    }
+  | null;
 
 function compareSortValues(
   leftValue: unknown,
@@ -177,6 +200,8 @@ export function DataTable<T extends object>({
     startX: number;
     startWidth: number;
   } | null>(null);
+  const [contextMenuState, setContextMenuState] =
+    React.useState<DataTableContextMenuState<T>>(null);
 
   const isSortControlled = sortState !== undefined;
   const [internalSortState, setInternalSortState] =
@@ -434,6 +459,41 @@ export function DataTable<T extends object>({
     }
   }, [effectiveSortState, isSortControlled, sortedVisibleColumns]);
 
+  const handleRowContextMenu = React.useCallback(
+    (event: React.MouseEvent, row: T, rowId: RowId) => {
+      if (rowActions.length === 0) {
+        return;
+      }
+
+      event.preventDefault();
+      setContextMenuState({
+        kind: "row",
+        x: event.clientX,
+        y: event.clientY,
+        row,
+        rowId,
+      });
+    },
+    [rowActions.length]
+  );
+
+  const handleColumnContextMenu = React.useCallback(
+    (event: React.MouseEvent, column: NormalizedDataTableColumn<T>) => {
+      if (columnActions.length === 0) {
+        return;
+      }
+
+      event.preventDefault();
+      setContextMenuState({
+        kind: "column",
+        x: event.clientX,
+        y: event.clientY,
+        column,
+      });
+    },
+    [columnActions.length]
+  );
+
   const handleResizeStart = React.useCallback(
     (columnId: string, startX: number, startWidth: number) => {
       setResizingColumn({
@@ -593,120 +653,69 @@ export function DataTable<T extends object>({
   );
 
   return (
-    <div
-      className={cn(
-        "w-full overflow-x-auto rounded-lg border border-zinc-200 bg-white shadow-sm",
-        classNames?.root
-      )}
+    <DropdownMenu
+      open={contextMenuState !== null}
+      onOpenChange={(open) => {
+        if (!open) {
+          setContextMenuState(null);
+        }
+      }}
     >
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-        modifiers={[restrictToHorizontalAxis]}
-      >
-        <table className={cn("w-full min-w-max border-collapse text-sm", classNames?.table)}>
-          <DataTableHeader
-            columns={sortedVisibleColumns}
-            classNames={classNames}
-            enableRowSelection={enableRowSelection}
-            headerSelectionState={headerSelectionState}
-            onToggleSelectAll={handleToggleSelectAll}
-            showRowActionsColumn={rowActions.length > 0}
-            columnActions={columnActions}
-            columnWidths={columnWidths}
-            resizingColumnId={resizingColumn?.columnId ?? null}
-            onResizeStart={handleResizeStart}
-            onColumnWidthMeasure={handleColumnWidthMeasure}
-            leftPinnedOffsets={leftPinnedOffsets}
-            rightPinnedOffsets={rightPinnedOffsets}
-            stickySelectionColumn={stickySelectionColumn}
-            stickyRowActionsColumn={stickyRowActionsColumn}
-            sortState={effectiveSortState}
-            onSortToggle={handleSortToggle}
+      {contextMenuState ? (
+        <DropdownMenuTrigger asChild>
+          <div
+            aria-hidden
+            style={{
+              position: "fixed",
+              left: contextMenuState.x,
+              top: contextMenuState.y,
+              width: 1,
+              height: 1,
+              pointerEvents: "none",
+            }}
           />
+        </DropdownMenuTrigger>
+      ) : null}
+      <div
+        className={cn(
+          "w-full overflow-x-auto rounded-lg border border-zinc-200 bg-white shadow-sm",
+          classNames?.root
+        )}
+      >
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+          modifiers={[restrictToHorizontalAxis]}
+        >
+          <table className={cn("w-full min-w-max border-collapse text-sm", classNames?.table)}>
+            <DataTableHeader
+              columns={sortedVisibleColumns}
+              classNames={classNames}
+              enableRowSelection={enableRowSelection}
+              headerSelectionState={headerSelectionState}
+              onToggleSelectAll={handleToggleSelectAll}
+              showRowActionsColumn={rowActions.length > 0}
+              columnActions={columnActions}
+              columnWidths={columnWidths}
+              resizingColumnId={resizingColumn?.columnId ?? null}
+              onResizeStart={handleResizeStart}
+              onColumnWidthMeasure={handleColumnWidthMeasure}
+              leftPinnedOffsets={leftPinnedOffsets}
+              rightPinnedOffsets={rightPinnedOffsets}
+              stickySelectionColumn={stickySelectionColumn}
+              stickyRowActionsColumn={stickyRowActionsColumn}
+              sortState={effectiveSortState}
+              onSortToggle={handleSortToggle}
+              onColumnContextMenu={handleColumnContextMenu}
+            />
 
-          <tbody className={cn(classNames?.tbody)}>
-            {isLoading
-              ? Array.from({ length: loadingRowCount }).map((_, index) => (
-                  <DataTableRow
-                    key={`loading-row-${index}`}
-                    className={cn(classNames?.loadingRow)}
-                  >
-                    {enableRowSelection ? (
-                      <DataTableCell
-                        className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}
-                        style={
-                          stickySelectionColumn
-                            ? {
-                                position: "sticky",
-                                left: "0px",
-                                zIndex: 25,
-                                backgroundColor: "inherit",
-                              }
-                            : undefined
-                        }
-                      >
-                        <div className="h-4 w-4 animate-pulse rounded bg-zinc-200" />
-                      </DataTableCell>
-                    ) : null}
-                    {sortedVisibleColumns.map((column) => (
-                      <DataTableCell
-                        key={`loading-${column.id}-${index}`}
-                        minWidth={column.minWidth}
-                        maxWidth={column.maxWidth}
-                        style={{
-                          width: columnWidths[column.id]
-                            ? `${columnWidths[column.id]}px`
-                            : undefined,
-                          ...getPinnedStyleForColumn(column.id),
-                        }}
-                        className={cn(classNames?.cell)}
-                      >
-                        {column.skeleton ?? defaultSkeletonCell()}
-                      </DataTableCell>
-                    ))}
-                    {rowActions.length > 0 ? (
-                      <DataTableCell
-                        className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}
-                        style={
-                          stickyRowActionsColumn
-                            ? {
-                                position: "sticky",
-                                right: "0px",
-                                zIndex: 25,
-                                backgroundColor: "inherit",
-                              }
-                            : undefined
-                        }
-                      >
-                        <div className="h-4 w-4 animate-pulse rounded bg-zinc-200" />
-                      </DataTableCell>
-                    ) : null}
-                  </DataTableRow>
-                ))
-              : null}
-
-            {!isLoading && rows.length === 0 ? (
-              <DataTableRow>
-                <DataTableCell
-                  colSpan={resolvedColumnCount}
-                  className={cn("py-6 text-center text-zinc-500", classNames?.emptyState)}
-                >
-                  {emptyState}
-                </DataTableCell>
-              </DataTableRow>
-            ) : null}
-
-            {!isLoading
-              ? sortedRowEntries.map(({ row, rowId }, rowIndex) => {
-                  const isSelected = effectiveSelectedRowIds.has(rowId);
-                  return (
+            <tbody className={cn(classNames?.tbody)}>
+              {isLoading
+                ? Array.from({ length: loadingRowCount }).map((_, index) => (
                     <DataTableRow
-                      key={String(rowId)}
-                      data-row-id={String(rowId)}
-                      data-selected={isSelected ? "true" : "false"}
-                      className={cn(classNames?.row, isSelected ? "bg-zinc-50" : undefined)}
+                      key={`loading-row-${index}`}
+                      className={cn(classNames?.loadingRow)}
                     >
                       {enableRowSelection ? (
                         <DataTableCell
@@ -722,20 +731,12 @@ export function DataTable<T extends object>({
                               : undefined
                           }
                         >
-                          <div className="flex items-center justify-center">
-                            <Checkbox
-                              checked={isSelected}
-                              onCheckedChange={(checked) =>
-                                handleSelectRow(rowId, checked)
-                              }
-                              aria-label={`Select row ${rowIndex + 1}`}
-                            />
-                          </div>
+                          <div className="h-4 w-4 animate-pulse rounded bg-zinc-200" />
                         </DataTableCell>
                       ) : null}
                       {sortedVisibleColumns.map((column) => (
                         <DataTableCell
-                          key={`${String(rowId)}-${column.id}`}
+                          key={`loading-${column.id}-${index}`}
                           minWidth={column.minWidth}
                           maxWidth={column.maxWidth}
                           style={{
@@ -746,12 +747,7 @@ export function DataTable<T extends object>({
                           }}
                           className={cn(classNames?.cell)}
                         >
-                          <EditableCellRenderer
-                            row={row}
-                            rowId={rowId}
-                            column={column}
-                            onCellChange={onCellChange}
-                          />
+                          {column.skeleton ?? defaultSkeletonCell()}
                         </DataTableCell>
                       ))}
                       {rowActions.length > 0 ? (
@@ -768,18 +764,155 @@ export function DataTable<T extends object>({
                               : undefined
                           }
                         >
-                          <div className="flex items-center justify-center">
-                            <RowActionsMenu row={row} rowId={rowId} actions={rowActions} />
-                          </div>
+                          <div className="h-4 w-4 animate-pulse rounded bg-zinc-200" />
                         </DataTableCell>
                       ) : null}
                     </DataTableRow>
-                  );
-                })
-              : null}
-          </tbody>
-        </table>
-      </DndContext>
-    </div>
+                  ))
+                : null}
+
+              {!isLoading && rows.length === 0 ? (
+                <DataTableRow>
+                  <DataTableCell
+                    colSpan={resolvedColumnCount}
+                    className={cn("py-6 text-center text-zinc-500", classNames?.emptyState)}
+                  >
+                    {emptyState}
+                  </DataTableCell>
+                </DataTableRow>
+              ) : null}
+
+              {!isLoading
+                ? sortedRowEntries.map(({ row, rowId }, rowIndex) => {
+                    const isSelected = effectiveSelectedRowIds.has(rowId);
+                    return (
+                      <DataTableRow
+                        key={String(rowId)}
+                        data-row-id={String(rowId)}
+                        data-selected={isSelected ? "true" : "false"}
+                        className={cn(classNames?.row, isSelected ? "bg-zinc-50" : undefined)}
+                        onContextMenu={(event) =>
+                          handleRowContextMenu(event, row, rowId)
+                        }
+                      >
+                        {enableRowSelection ? (
+                          <DataTableCell
+                            className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}
+                            style={
+                              stickySelectionColumn
+                                ? {
+                                    position: "sticky",
+                                    left: "0px",
+                                    zIndex: 25,
+                                    backgroundColor: "inherit",
+                                  }
+                                : undefined
+                            }
+                          >
+                            <div className="flex items-center justify-center">
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={(checked) =>
+                                  handleSelectRow(rowId, checked)
+                                }
+                                aria-label={`Select row ${rowIndex + 1}`}
+                              />
+                            </div>
+                          </DataTableCell>
+                        ) : null}
+                        {sortedVisibleColumns.map((column) => (
+                          <DataTableCell
+                            key={`${String(rowId)}-${column.id}`}
+                            minWidth={column.minWidth}
+                            maxWidth={column.maxWidth}
+                            style={{
+                              width: columnWidths[column.id]
+                                ? `${columnWidths[column.id]}px`
+                                : undefined,
+                              ...getPinnedStyleForColumn(column.id),
+                            }}
+                            className={cn(classNames?.cell)}
+                          >
+                            <EditableCellRenderer
+                              row={row}
+                              rowId={rowId}
+                              column={column}
+                              onCellChange={onCellChange}
+                            />
+                          </DataTableCell>
+                        ))}
+                        {rowActions.length > 0 ? (
+                          <DataTableCell
+                            className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}
+                            style={
+                              stickyRowActionsColumn
+                                ? {
+                                    position: "sticky",
+                                    right: "0px",
+                                    zIndex: 25,
+                                    backgroundColor: "inherit",
+                                  }
+                                : undefined
+                            }
+                          >
+                            <div className="flex items-center justify-center">
+                              <RowActionsMenu row={row} rowId={rowId} actions={rowActions} />
+                            </div>
+                          </DataTableCell>
+                        ) : null}
+                      </DataTableRow>
+                    );
+                  })
+                : null}
+            </tbody>
+          </table>
+        </DndContext>
+      </div>
+      {contextMenuState ? (
+        <DropdownMenuContent
+          align="start"
+          sideOffset={2}
+          className="min-w-44"
+          onCloseAutoFocus={(event) => event.preventDefault()}
+        >
+          {contextMenuState.kind === "row"
+            ? rowActions.map((action) => (
+                <DropdownMenuItem
+                  key={`${String(contextMenuState.rowId)}-ctx-${action.value}`}
+                  onSelect={() => {
+                    action.action(contextMenuState.row, {
+                      row: contextMenuState.row,
+                      rowId: contextMenuState.rowId,
+                    });
+                    setContextMenuState(null);
+                  }}
+                  className="cursor-pointer"
+                >
+                  {action.icon ? (
+                    <span className="mr-2 inline-flex">{action.icon}</span>
+                  ) : null}
+                  {action.label}
+                </DropdownMenuItem>
+              ))
+            : columnActions.map((action) => (
+                <DropdownMenuItem
+                  key={`${contextMenuState.column.id}-ctx-${action.value}`}
+                  onSelect={() => {
+                    action.action(contextMenuState.column, {
+                      column: contextMenuState.column,
+                    });
+                    setContextMenuState(null);
+                  }}
+                  className="cursor-pointer"
+                >
+                  {action.icon ? (
+                    <span className="mr-2 inline-flex">{action.icon}</span>
+                  ) : null}
+                  {action.label}
+                </DropdownMenuItem>
+              ))}
+        </DropdownMenuContent>
+      ) : null}
+    </DropdownMenu>
   );
 }
