@@ -29,7 +29,7 @@ export interface DataTableProps<T extends object> {
   columnActions?: DataTableColumnAction<T>[];
 
   // Step 5+: draggable columns
-  // onColumnOrderChange?: (columnIds: string[]) => void;
+  onColumnOrderChange?: (columnIds: string[]) => void;
 
   // Step 6+: resizable columns
   // onColumnResize?: (columnId: string, width: number) => void;

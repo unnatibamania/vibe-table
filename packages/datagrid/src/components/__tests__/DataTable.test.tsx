@@ -334,4 +334,28 @@ describe("DataTable", () => {
 
     expect(onColumnAction).toHaveBeenCalledWith("name");
   });
+
+  it("renders drag handles for draggable columns and hides when disabled", () => {
+    const columns: DataTableColumn<Row>[] = [
+      {
+        id: "name",
+        label: "Name",
+        header: "Name",
+        type: "text",
+        isDraggable: true,
+      },
+      {
+        id: "age",
+        label: "Age",
+        header: "Age",
+        type: "number",
+        isDraggable: false,
+      },
+    ];
+
+    render(<DataTable rows={rows} columns={columns} />);
+
+    expect(screen.getByTestId("drag-handle-name")).toBeInTheDocument();
+    expect(screen.queryByTestId("drag-handle-age")).not.toBeInTheDocument();
+  });
 });

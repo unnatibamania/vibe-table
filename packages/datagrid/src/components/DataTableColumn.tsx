@@ -1,15 +1,11 @@
-import type React from "react";
+import React from "react";
 import { cn } from "../lib/cn";
 import type { DataTableColumnProps } from "../types/table";
 
-export function DataTableColumn({
-  minWidth,
-  maxWidth,
-  className,
-  style,
-  children,
-  ...props
-}: DataTableColumnProps) {
+export const DataTableColumn = React.forwardRef<
+  HTMLTableCellElement,
+  DataTableColumnProps
+>(({ minWidth, maxWidth, className, style, children, ...props }, ref) => {
   const mergedStyle: React.CSSProperties = {
     minWidth: typeof minWidth === "number" ? `${minWidth}px` : undefined,
     maxWidth: typeof maxWidth === "number" ? `${maxWidth}px` : undefined,
@@ -18,9 +14,10 @@ export function DataTableColumn({
 
   return (
     <th
+      ref={ref}
       scope="col"
       className={cn(
-        "px-3 py-2 text-left align-middle font-medium text-zinc-900",
+        "border-b border-zinc-200 px-3 py-2 text-left align-middle font-medium text-zinc-900 whitespace-nowrap",
         className
       )}
       style={mergedStyle}
@@ -29,4 +26,6 @@ export function DataTableColumn({
       {children}
     </th>
   );
-}
+});
+
+DataTableColumn.displayName = "DataTableColumn";

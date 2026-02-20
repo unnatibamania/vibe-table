@@ -1,7 +1,10 @@
 "use client";
 
 import React from "react";
+import { closestCenter, DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import { cn } from "../lib/cn";
+import { mergeColumnOrder, reorderColumnIds } from "../lib/column-order";
 import { normalizeColumns } from "../lib/normalize-columns";
 import type { RowId } from "../types/table";
 import type { DataTableProps } from "../types/table";
@@ -27,6 +30,7 @@ export function DataTable<T extends object>({
   onSelectionChange,
   rowActions = [],
   columnActions = [],
+  onColumnOrderChange,
   classNames,
   isLoading = false,
   loadingRowCount = 3,
@@ -37,9 +41,25 @@ export function DataTable<T extends object>({
     [columns]
   );
 
+  const [columnOrder, setColumnOrder] = React.useState<string[]>(() =>
+    normalizedColumns.map((column) => column.id)
+  );
+
+  React.useEffect(() => {
+    const nextColumnIds = normalizedColumns.map((column) => column.id);
+    setColumnOrder((currentOrder) => mergeColumnOrder(currentOrder, nextColumnIds));
+  }, [normalizedColumns]);
+
+  const orderedColumns = React.useMemo(() => {
+    const columnMap = new Map(normalizedColumns.map((column) => [column.id, column]));
+    return columnOrder
+      .map((columnId) => columnMap.get(columnId))
+      .filter((column): column is NonNullable<typeof column> => Boolean(column));
+  }, [columnOrder, normalizedColumns]);
+
   const visibleColumns = React.useMemo(
-    () => normalizedColumns.filter((column) => column.isVisible),
-    [normalizedColumns]
+    () => orderedColumns.filter((column) => column.isVisible),
+    [orderedColumns]
   );
 
   const resolveRowId = React.useCallback(
@@ -155,113 +175,167 @@ export function DataTable<T extends object>({
     1
   );
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    })
+  );
+
+  const handleDragEnd = React.useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over) {
+        return;
+      }
+
+      const activeId = String(active.id);
+      const overId = String(over.id);
+
+      if (activeId === overId) {
+        return;
+      }
+
+      const activeColumn = visibleColumns.find((column) => column.id === activeId);
+      const overColumn = visibleColumns.find((column) => column.id === overId);
+
+      if (!activeColumn || !overColumn) {
+        return;
+      }
+
+      if (activeColumn.isDraggable === false || overColumn.isDraggable === false) {
+        return;
+      }
+
+      setColumnOrder((currentOrder) => {
+        const nextOrder = reorderColumnIds(currentOrder, activeId, overId);
+        if (nextOrder !== currentOrder && onColumnOrderChange) {
+          onColumnOrderChange(nextOrder);
+        }
+        return nextOrder;
+      });
+    },
+    [onColumnOrderChange, visibleColumns]
+  );
+
   return (
-    <div className={cn("w-full overflow-x-auto rounded-md border border-zinc-200", classNames?.root)}>
-      <table className={cn("w-full border-collapse text-sm", classNames?.table)}>
-        <DataTableHeader
-          columns={visibleColumns}
-          classNames={classNames}
-          enableRowSelection={enableRowSelection}
-          headerSelectionState={headerSelectionState}
-          onToggleSelectAll={handleToggleSelectAll}
-          showRowActionsColumn={rowActions.length > 0}
-          columnActions={columnActions}
-        />
+    <div
+      className={cn(
+        "w-full overflow-x-auto rounded-lg border border-zinc-200 bg-white shadow-sm",
+        classNames?.root
+      )}
+    >
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+        modifiers={[restrictToHorizontalAxis]}
+      >
+        <table className={cn("w-full min-w-max border-collapse text-sm", classNames?.table)}>
+          <DataTableHeader
+            columns={visibleColumns}
+            classNames={classNames}
+            enableRowSelection={enableRowSelection}
+            headerSelectionState={headerSelectionState}
+            onToggleSelectAll={handleToggleSelectAll}
+            showRowActionsColumn={rowActions.length > 0}
+            columnActions={columnActions}
+          />
 
-        <tbody className={cn(classNames?.tbody)}>
-          {isLoading
-            ? Array.from({ length: loadingRowCount }).map((_, index) => (
-                <DataTableRow
-                  key={`loading-row-${index}`}
-                  className={cn(classNames?.loadingRow)}
-                >
-                  {enableRowSelection ? (
-                    <DataTableCell className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}>
-                      <div className="h-4 w-4 animate-pulse rounded bg-zinc-200" />
-                    </DataTableCell>
-                  ) : null}
-                  {visibleColumns.map((column) => (
-                    <DataTableCell
-                      key={`loading-${column.id}-${index}`}
-                      minWidth={column.minWidth}
-                      maxWidth={column.maxWidth}
-                      className={cn(classNames?.cell)}
-                    >
-                      {column.skeleton ?? defaultSkeletonCell()}
-                    </DataTableCell>
-                  ))}
-                  {rowActions.length > 0 ? (
-                    <DataTableCell className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}>
-                      <div className="h-4 w-4 animate-pulse rounded bg-zinc-200" />
-                    </DataTableCell>
-                  ) : null}
-                </DataTableRow>
-              ))
-            : null}
-
-          {!isLoading && rows.length === 0 ? (
-            <DataTableRow>
-              <DataTableCell
-                colSpan={resolvedColumnCount}
-                className={cn("py-6 text-center text-zinc-500", classNames?.emptyState)}
-              >
-                {emptyState}
-              </DataTableCell>
-            </DataTableRow>
-          ) : null}
-
-          {!isLoading
-            ? rows.map((row, rowIndex) => {
-                const rowId = resolveRowId(row, rowIndex);
-                const isSelected = effectiveSelectedRowIds.has(rowId);
-                return (
+          <tbody className={cn(classNames?.tbody)}>
+            {isLoading
+              ? Array.from({ length: loadingRowCount }).map((_, index) => (
                   <DataTableRow
-                    key={String(rowId)}
-                    data-row-id={String(rowId)}
-                    data-selected={isSelected ? "true" : "false"}
-                    className={cn(classNames?.row, isSelected ? "bg-zinc-50" : undefined)}
+                    key={`loading-row-${index}`}
+                    className={cn(classNames?.loadingRow)}
                   >
                     {enableRowSelection ? (
                       <DataTableCell className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}>
-                        <div className="flex items-center justify-center">
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={(checked) =>
-                              handleSelectRow(rowId, checked)
-                            }
-                            aria-label={`Select row ${rowIndex + 1}`}
-                          />
-                        </div>
+                        <div className="h-4 w-4 animate-pulse rounded bg-zinc-200" />
                       </DataTableCell>
                     ) : null}
                     {visibleColumns.map((column) => (
                       <DataTableCell
-                        key={`${String(rowId)}-${column.id}`}
+                        key={`loading-${column.id}-${index}`}
                         minWidth={column.minWidth}
                         maxWidth={column.maxWidth}
                         className={cn(classNames?.cell)}
                       >
-                        <EditableCellRenderer
-                          row={row}
-                          rowId={rowId}
-                          column={column}
-                          onCellChange={onCellChange}
-                        />
+                        {column.skeleton ?? defaultSkeletonCell()}
                       </DataTableCell>
                     ))}
                     {rowActions.length > 0 ? (
                       <DataTableCell className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}>
-                        <div className="flex items-center justify-center">
-                          <RowActionsMenu row={row} rowId={rowId} actions={rowActions} />
-                        </div>
+                        <div className="h-4 w-4 animate-pulse rounded bg-zinc-200" />
                       </DataTableCell>
                     ) : null}
                   </DataTableRow>
-                );
-              })
-            : null}
-        </tbody>
-      </table>
+                ))
+              : null}
+
+            {!isLoading && rows.length === 0 ? (
+              <DataTableRow>
+                <DataTableCell
+                  colSpan={resolvedColumnCount}
+                  className={cn("py-6 text-center text-zinc-500", classNames?.emptyState)}
+                >
+                  {emptyState}
+                </DataTableCell>
+              </DataTableRow>
+            ) : null}
+
+            {!isLoading
+              ? rows.map((row, rowIndex) => {
+                  const rowId = resolveRowId(row, rowIndex);
+                  const isSelected = effectiveSelectedRowIds.has(rowId);
+                  return (
+                    <DataTableRow
+                      key={String(rowId)}
+                      data-row-id={String(rowId)}
+                      data-selected={isSelected ? "true" : "false"}
+                      className={cn(classNames?.row, isSelected ? "bg-zinc-50" : undefined)}
+                    >
+                      {enableRowSelection ? (
+                        <DataTableCell className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}>
+                          <div className="flex items-center justify-center">
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={(checked) =>
+                                handleSelectRow(rowId, checked)
+                              }
+                              aria-label={`Select row ${rowIndex + 1}`}
+                            />
+                          </div>
+                        </DataTableCell>
+                      ) : null}
+                      {visibleColumns.map((column) => (
+                        <DataTableCell
+                          key={`${String(rowId)}-${column.id}`}
+                          minWidth={column.minWidth}
+                          maxWidth={column.maxWidth}
+                          className={cn(classNames?.cell)}
+                        >
+                          <EditableCellRenderer
+                            row={row}
+                            rowId={rowId}
+                            column={column}
+                            onCellChange={onCellChange}
+                          />
+                        </DataTableCell>
+                      ))}
+                      {rowActions.length > 0 ? (
+                        <DataTableCell className={cn("w-11 min-w-11 max-w-11 px-2 py-2")}>
+                          <div className="flex items-center justify-center">
+                            <RowActionsMenu row={row} rowId={rowId} actions={rowActions} />
+                          </div>
+                        </DataTableCell>
+                      ) : null}
+                    </DataTableRow>
+                  );
+                })
+              : null}
+          </tbody>
+        </table>
+      </DndContext>
     </div>
   );
 }

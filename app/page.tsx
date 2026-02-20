@@ -186,6 +186,9 @@ export default function Home() {
     new Set()
   );
   const [lastAction, setLastAction] = React.useState<string>("none");
+  const [columnOrder, setColumnOrder] = React.useState<string[]>(
+    columns.map((column) => column.id)
+  );
 
   const handleCellChange = React.useCallback(
     (rowId: string | number, columnId: string, newValue: unknown) => {
@@ -252,6 +255,9 @@ export default function Home() {
         Selected rows: {selectedRowIds.size}
       </p>
       <p className="mb-4 text-sm text-zinc-600">Last action: {lastAction}</p>
+      <p className="mb-4 text-sm text-zinc-600">
+        Column order: {columnOrder.join(" > ")}
+      </p>
       <DataTable
         rows={rows}
         columns={columns}
@@ -261,6 +267,7 @@ export default function Home() {
         onSelectionChange={setSelectedRowIds}
         rowActions={rowActions}
         columnActions={columnActions}
+        onColumnOrderChange={setColumnOrder}
       />
     </main>
   );

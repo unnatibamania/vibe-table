@@ -5,6 +5,7 @@ export { DataTableRow } from "./components/DataTableRow";
 export { DataTableCell } from "./components/DataTableCell";
 export { ColumnActionsMenu } from "./components/column-actions-menu";
 export { RowActionsMenu } from "./components/row-actions-menu";
+export { DraggableHeaderColumn } from "./components/draggable-header-column";
 export { EditableCellRenderer } from "./components/cell-editors";
 export { TextCellEditor } from "./components/cells/text-cell-editor";
 export { NumberCellEditor } from "./components/cells/number-cell-editor";
@@ -33,6 +34,7 @@ export {
 } from "./components/ui/dropdown-menu";
 
 export { cn } from "./lib/cn";
+export { mergeColumnOrder, reorderColumnIds } from "./lib/column-order";
 export { getVisibleColumns, normalizeColumns } from "./lib/normalize-columns";
 
 export type {
