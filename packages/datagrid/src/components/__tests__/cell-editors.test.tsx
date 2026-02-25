@@ -68,13 +68,17 @@ describe("cell editors", () => {
     expect(onToggleCommit).toHaveBeenCalledWith(true);
   });
 
-  it("commits date changes", () => {
+  it("commits date changes", async () => {
+    const user = userEvent.setup();
     const onCommit = vi.fn();
 
     render(<DateCellEditor value={"2026-02-19"} isEditable onCommit={onCommit} />);
 
-    const input = screen.getByDisplayValue("2026-02-19");
-    fireEvent.change(input, { target: { value: "2026-02-20" } });
+    await user.click(screen.getByRole("button", { name: "2026-02-19" }));
+    const dayTwenty = await screen.findByText("20");
+    const dayTwentyButton = dayTwenty.closest("button");
+    expect(dayTwentyButton).not.toBeNull();
+    await user.click(dayTwentyButton as HTMLElement);
 
     expect(onCommit).toHaveBeenCalledWith("2026-02-20");
   });

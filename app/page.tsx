@@ -256,8 +256,10 @@ export default function Home() {
   );
 
   return (
-    <main className="mx-auto max-w-7xl p-8">
-      <h1 className="mb-4 text-2xl font-semibold">DataTable Grouping Demo</h1>
+    <main className="mx-auto max-w-7xl min-h-dvh bg-[#f9fafb] p-8">
+      <h1 className="mb-4 text-2xl font-semibold tracking-tight text-slate-900">
+        DataTable Grouping Demo
+      </h1>
       <p className="mb-6 text-sm text-zinc-600">
         Editable cells are enabled for text, number, boolean, date, select,
         multi-select, toggle, and rating types with pinning, sorting, and
