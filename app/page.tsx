@@ -9,6 +9,7 @@ import {
   type DataTableSortState,
   type RowId,
 } from "@/packages/datagrid/src";
+import { initialRows, type DemoRow } from "./demo-rows";
 
 const LIBRARY_TABLE_COLUMNS_IDS = {
   STATUS: "status",
@@ -22,62 +23,6 @@ const LIBRARY_TABLE_COLUMNS_IDS = {
   TAGS: "tags",
   RATING: "rating",
 } as const;
-
-type DemoRow = {
-  id: number;
-  status: string;
-  name: string;
-  age: number;
-  active: boolean;
-  featured: boolean;
-  updatedAt: string;
-  uploadedBy: string;
-  priority: string;
-  tags: string[];
-  rating: number;
-};
-
-const initialRows: DemoRow[] = [
-  {
-    id: 1,
-    status: "Ready",
-    name: "Alpha",
-    age: 29,
-    active: true,
-    featured: false,
-    updatedAt: "2026-02-19",
-    uploadedBy: "Nitin Ranganath",
-    priority: "high",
-    tags: ["frontend"],
-    rating: 4,
-  },
-  {
-    id: 2,
-    status: "In Review",
-    name: "Beta",
-    age: 34,
-    active: false,
-    featured: true,
-    updatedAt: "2026-02-18",
-    uploadedBy: "Unnati Bamania",
-    priority: "medium",
-    tags: ["backend", "api"],
-    rating: 3,
-  },
-  {
-    id: 3,
-    status: "Draft",
-    name: "Gamma",
-    age: 25,
-    active: true,
-    featured: false,
-    updatedAt: "2026-02-17",
-    uploadedBy: "Unnati Bamania",
-    priority: "low",
-    tags: ["ops"],
-    rating: 2,
-  },
-];
 
 const initialColumns: DataTableColumnConfig<DemoRow>[] = [
   {
@@ -215,10 +160,10 @@ export default function Home() {
     null
   );
   const [groupByColumnId] = React.useState<string | null>(
-    LIBRARY_TABLE_COLUMNS_IDS.AGE
+    null
   );
   const [subgroupByColumnId] = React.useState<string | null>(
-    LIBRARY_TABLE_COLUMNS_IDS.UPLOADED_BY
+    null
   );
 
   const handleCellChange = React.useCallback(

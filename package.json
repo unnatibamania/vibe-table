@@ -10,6 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "datagrid:clean": "npm run -w @vibe-tables/datagrid clean",
+    "datagrid:build": "npm run -w @vibe-tables/datagrid build",
     "datagrid:typecheck": "npm run -w @vibe-tables/datagrid typecheck",
     "datagrid:test": "npm run -w @vibe-tables/datagrid test",
     "datagrid:test:watch": "npm run -w @vibe-tables/datagrid test:watch"

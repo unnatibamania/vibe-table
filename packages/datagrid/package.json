@@ -2,25 +2,32 @@
   "name": "@vibe-tables/datagrid",
   "version": "0.0.1",
   "description": "Highly customizable DataTable/DataGrid primitives for React.",
-  "private": true,
+  "license": "MIT",
+  "sideEffects": false,
   "type": "module",
-  "main": "./src/index.ts",
-  "module": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "import": "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
     }
   },
   "files": [
-    "src"
+    "dist",
+    "README.md"
   ],
   "scripts": {
+    "clean": "rm -rf dist",
+    "build": "tsup",
+    "build:watch": "tsup --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepack": "npm run clean && npm run build && npm run typecheck && npm run test"
   },
   "peerDependencies": {
     "react": ">=18",
@@ -49,6 +56,7 @@
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "jsdom": "^27.0.1",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   }
