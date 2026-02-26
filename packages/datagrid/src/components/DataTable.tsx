@@ -890,7 +890,7 @@ export function DataTable<T extends object>({
       ) : null}
       <div
         className={cn(
-          "w-full overflow-x-auto rounded-lg border border-zinc-200 bg-white shadow-sm",
+          "w-full overflow-x-auto rounded-lg border border-zinc-200 bg-white",
           classNames?.root
         )}
       >

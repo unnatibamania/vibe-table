@@ -124,6 +124,8 @@ export function DraggableHeaderColumn<T extends object>({
     <ArrowUpDown className="h-3.5 w-3.5 text-zinc-400" />
   );
 
+  const HeaderIcon = column.Icon;
+
   return (
     <DataTableColumn
       ref={setRefs}
@@ -167,11 +169,19 @@ export function DraggableHeaderColumn<T extends object>({
               onClick={() => onSortToggle?.(column.id)}
               data-testid={`sort-trigger-${column.id}`}
             >
+              {HeaderIcon ? (
+                <HeaderIcon className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
+              ) : null}
               <span className="truncate">{column.header ?? column.label}</span>
               {sortIcon}
             </button>
           ) : (
-            <span className="truncate">{column.header ?? column.label}</span>
+            <span className="inline-flex min-w-0 items-center gap-1 truncate">
+              {HeaderIcon ? (
+                <HeaderIcon className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
+              ) : null}
+              <span className="truncate">{column.header ?? column.label}</span>
+            </span>
           )}
         </div>
         {column.showColumnActions === false ? null : (

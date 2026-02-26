@@ -10,6 +10,18 @@ import {
   type RowId,
 } from "@/packages/datagrid/src";
 import { initialRows, type DemoRow } from "./demo-rows";
+import {
+  Activity,
+  Calendar,
+  Check,
+  Flag,
+  Hash,
+  Star,
+  Tag,
+  User,
+  Users,
+} from "lucide-react";
+
 
 const LIBRARY_TABLE_COLUMNS_IDS = {
   STATUS: "status",
@@ -28,6 +40,7 @@ const initialColumns: DataTableColumnConfig<DemoRow>[] = [
   {
     id: LIBRARY_TABLE_COLUMNS_IDS.STATUS,
     label: "Status",
+    Icon: Activity,
     header: (
       <div className="flex items-center gap-2">
         <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-700" />
@@ -56,8 +69,10 @@ const initialColumns: DataTableColumnConfig<DemoRow>[] = [
   {
     id: LIBRARY_TABLE_COLUMNS_IDS.NAME,
     label: "Name",
+    Icon: User,
     header: "Name",
     minWidth: 160,
+    maxWidth: 500,
     isEditable: true,
     isSortable: true,
     type: "text",
@@ -65,6 +80,7 @@ const initialColumns: DataTableColumnConfig<DemoRow>[] = [
   {
     id: LIBRARY_TABLE_COLUMNS_IDS.AGE,
     label: "Age",
+    Icon: Hash,
     header: "Age",
     minWidth: 100,
     isEditable: true,
@@ -74,6 +90,7 @@ const initialColumns: DataTableColumnConfig<DemoRow>[] = [
   {
     id: LIBRARY_TABLE_COLUMNS_IDS.ACTIVE,
     label: "Active",
+    Icon: Check,
     header: "Active",
     minWidth: 100,
     isEditable: true,
@@ -82,6 +99,7 @@ const initialColumns: DataTableColumnConfig<DemoRow>[] = [
   {
     id: LIBRARY_TABLE_COLUMNS_IDS.FEATURED,
     label: "Featured",
+    Icon: Star,
     header: "Featured",
     minWidth: 120,
     isEditable: true,
@@ -90,6 +108,7 @@ const initialColumns: DataTableColumnConfig<DemoRow>[] = [
   {
     id: LIBRARY_TABLE_COLUMNS_IDS.UPDATED_AT,
     label: "Updated",
+    Icon: Calendar,
     header: "Updated",
     minWidth: 140,
     isEditable: true,
@@ -99,6 +118,7 @@ const initialColumns: DataTableColumnConfig<DemoRow>[] = [
   {
     id: LIBRARY_TABLE_COLUMNS_IDS.UPLOADED_BY,
     label: "Uploaded By",
+    Icon: Users,
     header: "Uploaded By",
     minWidth: 180,
     isSortable: true,
@@ -107,6 +127,7 @@ const initialColumns: DataTableColumnConfig<DemoRow>[] = [
   {
     id: LIBRARY_TABLE_COLUMNS_IDS.PRIORITY,
     label: "Priority",
+    Icon: Flag,
     header: "Priority",
     minWidth: 130,
     isEditable: true,
@@ -121,6 +142,7 @@ const initialColumns: DataTableColumnConfig<DemoRow>[] = [
   {
     id: LIBRARY_TABLE_COLUMNS_IDS.TAGS,
     label: "Tags",
+    Icon: Tag,
     header: "Tags",
     minWidth: 200,
     isEditable: true,
@@ -135,6 +157,7 @@ const initialColumns: DataTableColumnConfig<DemoRow>[] = [
   {
     id: LIBRARY_TABLE_COLUMNS_IDS.RATING,
     label: "Rating",
+    Icon: Star,
     header: "Rating",
     minWidth: 170,
     isEditable: true,
@@ -256,30 +279,8 @@ export default function Home() {
   );
 
   return (
-    <main className="mx-auto max-w-7xl min-h-dvh bg-[#f9fafb] p-8">
-      <h1 className="mb-4 text-2xl font-semibold tracking-tight text-slate-900">
-        DataTable Grouping Demo
-      </h1>
-      <p className="mb-6 text-sm text-zinc-600">
-        Editable cells are enabled for text, number, boolean, date, select,
-        multi-select, toggle, and rating types with pinning, sorting, and
-        grouping support.
-      </p>
-      <p className="mb-4 text-sm text-zinc-600">
-        Selected rows: {selectedRowIds.size}
-      </p>
-      <p className="mb-4 text-sm text-zinc-600">Last action: {lastAction}</p>
-      <p className="mb-4 text-sm text-zinc-600">
-        Column order: {columnOrder.join(" > ")}
-      </p>
-      <p className="mb-4 text-sm text-zinc-600">Last resize: {lastResize}</p>
-      <p className="mb-4 text-sm text-zinc-600">
-        Sort state:{" "}
-        {sortState ? `${sortState.columnId} (${sortState.direction})` : "none"}
-      </p>
-      <p className="mb-4 text-sm text-zinc-600">
-        Grouping: {groupByColumnId ?? "none"} / {subgroupByColumnId ?? "none"}
-      </p>
+    <main className="mx-auto max-w-7xl min-h-dvh p-8">
+
       <DataTable
         rows={rows}
         columns={columns}

@@ -32,6 +32,7 @@ interface BaseDataTableColumn<T> {
   id: string;
   label: string;
   header: React.ReactNode;
+  Icon?: React.ComponentType<{ className?: string }>;
   minWidth?: number;
   maxWidth?: number;
   pin?: "left" | "right" | null;
