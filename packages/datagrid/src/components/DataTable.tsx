@@ -26,7 +26,7 @@ import {
 } from "./ui/dropdown-menu";
 
 function defaultSkeletonCell() {
-  return <div className="h-4 w-full animate-pulse rounded bg-zinc-200" />;
+  return <div className="h-4 w-full animate-pulse rounded-md bg-slate-200/70" />;
 }
 
 const UTILITY_COLUMN_WIDTH = 44;
@@ -887,7 +887,7 @@ export function DataTable<T extends object>({
       ) : null}
       <div
         className={cn(
-          "w-full overflow-x-auto rounded-lg border border-zinc-200 bg-white",
+          "w-full overflow-x-auto rounded-2xl border border-slate-200/60 bg-white shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]",
           classNames?.root
         )}
       >
@@ -897,7 +897,7 @@ export function DataTable<T extends object>({
           onDragEnd={handleDragEnd}
           modifiers={[restrictToHorizontalAxis]}
         >
-          <table className={cn("w-full min-w-max border-collapse text-sm", classNames?.table)}>
+          <table className={cn("w-full min-w-max border-collapse text-sm font-(--font-geist-sans) tracking-tight", classNames?.table)}>
             <DataTableHeader
               columns={sortedVisibleColumns}
               classNames={classNames}
@@ -943,7 +943,7 @@ export function DataTable<T extends object>({
                               : undefined
                           }
                         >
-                          <div className="h-4 w-4 animate-pulse rounded bg-zinc-200" />
+                          <div className="h-4 w-4 animate-pulse rounded-md bg-slate-200/70" />
                         </DataTableCell>
                       ) : null}
                       {sortedVisibleColumns.map((column) => (
@@ -979,7 +979,7 @@ export function DataTable<T extends object>({
                               : undefined
                           }
                         >
-                          <div className="h-4 w-4 animate-pulse rounded bg-zinc-200" />
+                          <div className="h-4 w-4 animate-pulse rounded-md bg-slate-200/70" />
                         </DataTableCell>
                       ) : null}
                     </DataTableRow>
@@ -990,7 +990,11 @@ export function DataTable<T extends object>({
                 <DataTableRow>
                   <DataTableCell
                     colSpan={resolvedColumnCount}
-                    className={cn("py-6 text-center text-zinc-500", classNames?.emptyState)}
+                    className={cn(
+                      "py-16 text-center text-base leading-relaxed",
+                      "text-zinc-500 font-(--font-geist-sans)",
+                      classNames?.emptyState
+                    )}
                   >
                     {emptyState}
                   </DataTableCell>
@@ -1018,15 +1022,15 @@ export function DataTable<T extends object>({
                           className={cn(
                             item.level === 1 ? classNames?.groupHeaderRow : classNames?.subgroupHeaderRow,
                             item.level === 1
-                              ? "bg-zinc-100/90 hover:bg-zinc-100/90"
-                              : "bg-zinc-50 hover:bg-zinc-50"
+                              ? "bg-slate-100/80 hover:bg-slate-100/80"
+                              : "bg-slate-50/60 hover:bg-slate-50/60"
                           )}
                         >
                           <DataTableCell
                             colSpan={resolvedColumnCount}
                             className={cn(
-                              "px-3 py-2 font-medium text-zinc-700",
-                              item.level === 2 ? "pl-8 text-zinc-600" : "text-zinc-800",
+                              "px-3 py-2 font-medium text-slate-700",
+                              item.level === 2 ? "pl-8 text-slate-600" : "text-slate-800",
                               classNames?.groupHeaderCell
                             )}
                           >
@@ -1043,7 +1047,7 @@ export function DataTable<T extends object>({
                         key={item.key}
                         data-row-id={String(rowId)}
                         data-selected={isSelected ? "true" : "false"}
-                        className={cn(classNames?.row, isSelected ? "bg-zinc-50" : undefined)}
+                        className={cn(classNames?.row, isSelected ? "bg-slate-50/80" : undefined)}
                         onContextMenu={(event) =>
                           handleRowContextMenu(event, row, rowId)
                         }
@@ -1054,7 +1058,7 @@ export function DataTable<T extends object>({
                               "w-11 min-w-11 max-w-11 px-2 py-2",
                               classNames?.selectionCell
                             )}
-                            style={
+                                style={
                               stickySelectionColumn
                                 ? {
                                     position: "sticky",

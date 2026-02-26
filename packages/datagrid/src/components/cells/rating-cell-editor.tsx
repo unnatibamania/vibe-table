@@ -33,7 +33,7 @@ export function RatingCellEditor({
             size="icon"
             className={cn(
               "h-6 w-6 p-0 text-base leading-none",
-              isFilled ? "text-amber-500" : "text-zinc-300",
+              isFilled ? "text-teal-600" : "text-slate-300",
               !isEditable && "cursor-default"
             )}
             disabled={!isEditable}

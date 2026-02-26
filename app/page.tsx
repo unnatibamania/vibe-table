@@ -92,15 +92,25 @@ const initialColumns: DataTableColumnConfig<DemoTableRow>[] = [
     isDeletable: false,
     isSortable: false,
     showColumnActions: false,
-    cell: (row) => (
-      <div className="flex h-full w-full items-center justify-start">
-        <span className="rounded bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">
-          {row.status}
-        </span>
-      </div>
-    ),
+    cell: (row) => {
+      const statusVariant =
+        row.status === "Ready"
+          ? "bg-emerald-500/10 text-emerald-700 border-emerald-200/60"
+          : row.status === "In Review"
+            ? "bg-amber-500/10 text-amber-700 border-amber-200/60"
+            : "bg-slate-100 text-slate-600 border-slate-200/60";
+      return (
+        <div className="flex h-full w-full items-center justify-start">
+          <span
+            className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-medium tracking-tight ${statusVariant}`}
+          >
+            {row.status}
+          </span>
+        </div>
+      );
+    },
     type: "custom",
-    skeleton: <div className="ml-1 h-4 w-16 rounded bg-zinc-200" />,
+    skeleton: <div className="ml-1 h-5 w-16 animate-pulse rounded-md bg-slate-200/70" />,
   },
   {
     id: LIBRARY_TABLE_COLUMNS_IDS.NAME,
@@ -347,7 +357,15 @@ export default function Home() {
   );
 
   return (
-    <main className="mx-auto max-w-7xl min-h-dvh p-8">
+    <main className="mx-auto max-w-7xl min-h-dvh px-4 py-8 md:px-8 md:py-10">
+      <header className="mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">
+          Library
+        </h1>
+        <p className="mt-1 text-base text-slate-600 leading-relaxed max-w-[65ch]">
+          Manage your video assets, metadata, and status.
+        </p>
+      </header>
 
       <DataTable
         rows={rows}
@@ -367,6 +385,7 @@ export default function Home() {
         onSortChange={setSortState}
         groupByColumnId={groupByColumnId}
         subgroupByColumnId={subgroupByColumnId}
+        emptyState="No rows yet"
       />
     </main>
   );

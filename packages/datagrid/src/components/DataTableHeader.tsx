@@ -31,12 +31,12 @@ export function DataTableHeader<T extends object>({
   onColumnContextMenu,
 }: DataTableHeaderProps<T>) {
   return (
-    <thead className={cn("", classNames?.thead)}>
+    <thead className={cn("bg-slate-50/80", classNames?.thead)}>
       <SortableContext
         items={columns.map((column) => column.id)}
         strategy={horizontalListSortingStrategy}
       >
-        <DataTableRow className={cn("h-11", classNames?.headerRow)}>
+        <DataTableRow className={cn("h-12 border-b border-slate-200/50", classNames?.headerRow)}>
           {enableRowSelection ? (
             <DataTableColumn
               className={cn(
@@ -49,7 +49,7 @@ export function DataTableHeader<T extends object>({
                       position: "sticky",
                       left: "0px",
                       zIndex: 35,
-                      backgroundColor: "rgb(250 250 250)",
+                      backgroundColor: "rgb(248 250 252)",
                     }
                   : undefined
               }
@@ -102,13 +102,13 @@ export function DataTableHeader<T extends object>({
                       position: "sticky",
                       right: "0px",
                       zIndex: 35,
-                      backgroundColor: "rgb(250 250 250)",
+                      backgroundColor: "rgb(248 250 252)",
                     }
                   : undefined
               }
             >
               <div className="flex items-center justify-center">
-                <MoreHorizontal className="h-4 w-4 text-zinc-500" />
+                <MoreHorizontal className="h-4 w-4 text-slate-500" />
               </div>
             </DataTableColumn>
           ) : null}

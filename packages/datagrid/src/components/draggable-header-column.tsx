@@ -99,7 +99,7 @@ export function DraggableHeaderColumn<T extends object>({
     left: isPinnedLeft ? `${pinnedOffset}px` : undefined,
     right: isPinnedRight ? `${pinnedOffset}px` : undefined,
     zIndex: isDragging ? 40 : isPinned ? 30 : undefined,
-    backgroundColor: isPinned ? "rgb(250 250 250)" : undefined,
+    backgroundColor: isPinned ? "rgb(248 250 252)" : undefined,
   };
 
   if (effectiveWidth && effectiveWidth > 0) {
@@ -117,11 +117,11 @@ export function DraggableHeaderColumn<T extends object>({
     : undefined;
 
   const sortIcon = !isSortable ? null : sortDirection === "asc" ? (
-    <ArrowUp className="h-3.5 w-3.5 text-zinc-700" />
+    <ArrowUp className="h-3.5 w-3.5 text-slate-600" />
   ) : sortDirection === "desc" ? (
-    <ArrowDown className="h-3.5 w-3.5 text-zinc-700" />
+    <ArrowDown className="h-3.5 w-3.5 text-slate-600" />
   ) : (
-    <ArrowUpDown className="h-3.5 w-3.5 text-zinc-400" />
+    <ArrowUpDown className="h-3.5 w-3.5 text-slate-400" />
   );
 
   const HeaderIcon = column.Icon;
@@ -133,8 +133,8 @@ export function DraggableHeaderColumn<T extends object>({
       maxWidth={column.maxWidth}
       className={cn(
         className,
-        isPinned ? "bg-zinc-50" : undefined,
-        isDragging ? "bg-zinc-100/70 shadow-md" : undefined
+        isPinned ? "bg-slate-50/90" : undefined,
+        isDragging ? "bg-white/95 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12)]" : undefined
       )}
       style={style}
       data-draggable={isDraggable ? "true" : "false"}
@@ -148,7 +148,7 @@ export function DraggableHeaderColumn<T extends object>({
             <button
               type="button"
               className={cn(
-                "inline-flex h-5 w-5 cursor-grab touch-none items-center justify-center rounded text-zinc-500 hover:bg-zinc-200 active:cursor-grabbing",
+                "inline-flex h-5 w-5 cursor-grab touch-none items-center justify-center rounded text-slate-500 hover:bg-slate-200/80 active:cursor-grabbing active:scale-[0.98] transition-transform duration-150",
                 classNames?.dragHandle
               )}
               aria-label={`Drag column ${column.label}`}
@@ -163,22 +163,22 @@ export function DraggableHeaderColumn<T extends object>({
             <button
               type="button"
               className={cn(
-                "inline-flex min-w-0 items-center gap-2 rounded px-1 py-0.5 text-left hover:bg-zinc-100",
+                "inline-flex min-w-0 items-center gap-2 rounded px-1 py-0.5 text-left hover:bg-slate-100/80 active:scale-[0.98] transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
                 classNames?.sortTrigger
               )}
               onClick={() => onSortToggle?.(column.id)}
               data-testid={`sort-trigger-${column.id}`}
             >
               {HeaderIcon ? (
-                <HeaderIcon className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
+                <HeaderIcon className="h-3.5 w-3.5 shrink-0 text-slate-500" />
               ) : null}
               <span className="truncate">{column.header ?? column.label}</span>
               {sortIcon}
             </button>
           ) : (
-            <span className="inline-flex min-w-0 items-center gap-1 truncate">
+            <span className="inline-flex min-w-0 items-center gap-1 truncate font-medium text-slate-700">
               {HeaderIcon ? (
-                <HeaderIcon className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
+                <HeaderIcon className="h-3.5 w-3.5 shrink-0 text-slate-500" />
               ) : null}
               <span className="truncate">{column.header ?? column.label}</span>
             </span>
@@ -199,8 +199,8 @@ export function DraggableHeaderColumn<T extends object>({
           aria-label={`Resize column ${column.label}`}
           data-testid={`resize-handle-${column.id}`}
           className={cn(
-            "absolute right-0 top-0 h-full w-1 cursor-col-resize bg-transparent transition-colors hover:bg-zinc-300",
-            isResizing ? "bg-zinc-400" : undefined,
+            "absolute right-0 top-0 h-full w-1 cursor-col-resize bg-transparent transition-colors duration-200 hover:bg-slate-300/80",
+            isResizing ? "bg-teal-500/60" : undefined,
             classNames?.resizeHandle
           )}
           onMouseDown={(event) => {
