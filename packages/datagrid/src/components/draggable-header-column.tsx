@@ -15,6 +15,8 @@ import { DataTableColumn } from "./DataTableColumn";
 interface DraggableHeaderColumnProps<T extends object> {
   column: NormalizedDataTableColumn<T>;
   className?: string;
+  animateOut?: boolean;
+  animateIn?: boolean;
   columnActions: DataTableColumnAction<T>[];
   width?: number;
   isResizing?: boolean;
@@ -35,6 +37,8 @@ interface DraggableHeaderColumnProps<T extends object> {
 export function DraggableHeaderColumn<T extends object>({
   column,
   className,
+  animateOut,
+  animateIn,
   columnActions,
   width,
   isResizing = false,
@@ -105,8 +109,10 @@ export function DraggableHeaderColumn<T extends object>({
     position: isPinned ? "sticky" : "relative",
     left: isPinnedLeft ? `${pinnedOffset}px` : undefined,
     right: isPinnedRight ? `${pinnedOffset}px` : undefined,
-    zIndex: isDragging ? 40 : isPinned ? 30 : undefined,
+    zIndex: isDragging ? 50 : isPinned ? 40 : undefined,
     backgroundColor: isPinned ? "rgb(248 250 252)" : undefined,
+    ...(isPinnedLeft && { borderRight: "1px solid rgb(212 212 212)" }),
+    ...(isPinnedRight && { borderLeft: "1px solid rgb(212 212 212)" }),
   };
 
   if (effectiveWidth && effectiveWidth > 0) {
@@ -154,6 +160,8 @@ export function DraggableHeaderColumn<T extends object>({
       ref={setRefs}
       minWidth={column.minWidth}
       maxWidth={column.maxWidth}
+      animateOut={animateOut}
+      animateIn={animateIn}
       className={cn(
         className,
         isPinned ? "bg-slate-50/90" : undefined,

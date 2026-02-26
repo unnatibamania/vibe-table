@@ -239,6 +239,63 @@ export function DataTable<T extends object>({
     [orderedColumns]
   );
 
+  const [columnsToAnimateOut, setColumnsToAnimateOut] = React.useState<
+    Set<string>
+  >(new Set());
+  const prevVisibleIdsRef = React.useRef<Set<string>>(
+    new Set(visibleColumns.map((c) => c.id))
+  );
+
+  const [columnsToAnimateIn, setColumnsToAnimateIn] = React.useState<
+    Set<string>
+  >(new Set());
+
+  React.useLayoutEffect(() => {
+    const currentIds = new Set(visibleColumns.map((c) => c.id));
+    const prevIds = prevVisibleIdsRef.current;
+    const removedIds = [...prevIds].filter((id) => !currentIds.has(id));
+    const addedIds = [...currentIds].filter((id) => !prevIds.has(id));
+    prevVisibleIdsRef.current = currentIds;
+    if (removedIds.length > 0) {
+      setColumnsToAnimateOut((prev) => new Set([...prev, ...removedIds]));
+    }
+    if (addedIds.length > 0) {
+      setColumnsToAnimateIn((prev) => new Set([...prev, ...addedIds]));
+    }
+  }, [visibleColumns]);
+
+  React.useEffect(() => {
+    if (columnsToAnimateOut.size === 0) return;
+    const timer = setTimeout(() => {
+      setColumnsToAnimateOut(new Set());
+    }, 220);
+    return () => clearTimeout(timer);
+  }, [columnsToAnimateOut]);
+
+  React.useEffect(() => {
+    if (columnsToAnimateIn.size === 0) return;
+    const timer = setTimeout(() => {
+      setColumnsToAnimateIn(new Set());
+    }, 220);
+    return () => clearTimeout(timer);
+  }, [columnsToAnimateIn]);
+
+  const displayColumnIds = React.useMemo(() => {
+    const visibleIds = new Set(visibleColumns.map((c) => c.id));
+    return columnOrder.filter(
+      (id) => visibleIds.has(id) || columnsToAnimateOut.has(id)
+    );
+  }, [columnOrder, visibleColumns, columnsToAnimateOut]);
+
+  const displayColumns = React.useMemo(() => {
+    const columnMap = new Map(orderedColumns.map((c) => [c.id, c]));
+    return displayColumnIds
+      .map((id) => columnMap.get(id))
+      .filter(
+        (col): col is NormalizedDataTableColumn<T> => col != null
+      );
+  }, [displayColumnIds, orderedColumns]);
+
   const leftPinnedColumns = React.useMemo(
     () => visibleColumns.filter((column) => column.pin === "left"),
     [visibleColumns]
@@ -260,6 +317,30 @@ export function DataTable<T extends object>({
   const sortedVisibleColumns = React.useMemo(
     () => [...leftPinnedColumns, ...centerColumns, ...rightPinnedColumns],
     [centerColumns, leftPinnedColumns, rightPinnedColumns]
+  );
+
+  const leftPinnedDisplayColumns = React.useMemo(
+    () => displayColumns.filter((c) => c.pin === "left"),
+    [displayColumns]
+  );
+  const centerDisplayColumns = React.useMemo(
+    () =>
+      displayColumns.filter(
+        (c) => c.pin !== "left" && c.pin !== "right"
+      ),
+    [displayColumns]
+  );
+  const rightPinnedDisplayColumns = React.useMemo(
+    () => displayColumns.filter((c) => c.pin === "right"),
+    [displayColumns]
+  );
+  const sortedDisplayColumns = React.useMemo(
+    () => [
+      ...leftPinnedDisplayColumns,
+      ...centerDisplayColumns,
+      ...rightPinnedDisplayColumns,
+    ],
+    [centerDisplayColumns, leftPinnedDisplayColumns, rightPinnedDisplayColumns]
   );
 
   const orderedColumnMap = React.useMemo(
@@ -802,39 +883,39 @@ export function DataTable<T extends object>({
         return measuredWidth;
       }
 
-      const column = sortedVisibleColumns.find((candidate) => candidate.id === columnId);
+      const column = orderedColumnMap.get(columnId);
       if (!column) {
         return 140;
       }
 
       return column.minWidth ?? 140;
     },
-    [columnWidths, sortedVisibleColumns]
+    [columnWidths, orderedColumnMap]
   );
 
   const leftPinnedOffsets = React.useMemo(() => {
     const offsets: Record<string, number> = {};
     let nextLeftOffset = stickySelectionColumn ? UTILITY_COLUMN_WIDTH : 0;
 
-    leftPinnedColumns.forEach((column) => {
+    leftPinnedDisplayColumns.forEach((column) => {
       offsets[column.id] = nextLeftOffset;
       nextLeftOffset += getEffectiveColumnWidth(column.id);
     });
 
     return offsets;
-  }, [getEffectiveColumnWidth, leftPinnedColumns, stickySelectionColumn]);
+  }, [getEffectiveColumnWidth, leftPinnedDisplayColumns, stickySelectionColumn]);
 
   const rightPinnedOffsets = React.useMemo(() => {
     const offsets: Record<string, number> = {};
     let nextRightOffset = stickyRowActionsColumn ? UTILITY_COLUMN_WIDTH : 0;
 
-    [...rightPinnedColumns].reverse().forEach((column) => {
+    [...rightPinnedDisplayColumns].reverse().forEach((column) => {
       offsets[column.id] = nextRightOffset;
       nextRightOffset += getEffectiveColumnWidth(column.id);
     });
 
     return offsets;
-  }, [getEffectiveColumnWidth, rightPinnedColumns, stickyRowActionsColumn]);
+  }, [getEffectiveColumnWidth, rightPinnedDisplayColumns, stickyRowActionsColumn]);
 
   const getPinnedStyleForColumn = React.useCallback(
     (columnId: string): React.CSSProperties => {
@@ -842,8 +923,9 @@ export function DataTable<T extends object>({
         return {
           position: "sticky",
           left: `${leftPinnedOffsets[columnId]}px`,
-          zIndex: 20,
+          zIndex: 30,
           backgroundColor: "inherit",
+          borderRight: "1px solid rgb(212 212 212)",
         };
       }
 
@@ -851,8 +933,9 @@ export function DataTable<T extends object>({
         return {
           position: "sticky",
           right: `${rightPinnedOffsets[columnId]}px`,
-          zIndex: 20,
+          zIndex: 30,
           backgroundColor: "inherit",
+          borderLeft: "1px solid rgb(212 212 212)",
         };
       }
 
@@ -899,7 +982,9 @@ export function DataTable<T extends object>({
         >
           <table className={cn("w-full min-w-max border-collapse text-sm font-(--font-geist-sans) tracking-tight", classNames?.table)}>
             <DataTableHeader
-              columns={sortedVisibleColumns}
+              columns={sortedDisplayColumns}
+              columnsToAnimateOut={columnsToAnimateOut}
+              columnsToAnimateIn={columnsToAnimateIn}
               classNames={classNames}
               enableRowSelection={enableRowSelection}
               headerSelectionState={headerSelectionState}
@@ -946,11 +1031,13 @@ export function DataTable<T extends object>({
                           <div className="h-4 w-4 animate-pulse rounded-md bg-slate-200/70" />
                         </DataTableCell>
                       ) : null}
-                      {sortedVisibleColumns.map((column) => (
+                      {sortedDisplayColumns.map((column) => (
                         <DataTableCell
                           key={`loading-${column.id}-${index}`}
                           minWidth={column.minWidth}
                           maxWidth={column.maxWidth}
+                          animateOut={columnsToAnimateOut.has(column.id)}
+                          animateIn={columnsToAnimateIn.has(column.id)}
                           style={{
                             width: columnWidths[column.id]
                               ? `${columnWidths[column.id]}px`
@@ -1080,11 +1167,13 @@ export function DataTable<T extends object>({
                             </div>
                           </DataTableCell>
                         ) : null}
-                        {sortedVisibleColumns.map((column) => (
+                        {sortedDisplayColumns.map((column) => (
                           <DataTableCell
                             key={`${String(rowId)}-${column.id}`}
                             minWidth={column.minWidth}
                             maxWidth={column.maxWidth}
+                            animateOut={columnsToAnimateOut.has(column.id)}
+                            animateIn={columnsToAnimateIn.has(column.id)}
                             style={{
                               width: columnWidths[column.id]
                                 ? `${columnWidths[column.id]}px`
@@ -1162,7 +1251,13 @@ export function DataTable<T extends object>({
                   {action.label}
                 </DropdownMenuItem>
               ))
-            : columnActions.map((action) => (
+            : columnActions
+                .filter(
+                  (action) =>
+                    !action.visibleWhen ||
+                    action.visibleWhen(contextMenuState.column)
+                )
+                .map((action) => (
                 <DropdownMenuItem
                   key={`${contextMenuState.column.id}-ctx-${action.value}`}
                   onSelect={() => {

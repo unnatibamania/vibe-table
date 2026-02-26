@@ -70,6 +70,8 @@ export interface DataTableProps<T extends object> {
 
 export interface DataTableHeaderProps<T extends object> {
   columns: NormalizedDataTableColumn<T>[];
+  columnsToAnimateOut?: Set<string>;
+  columnsToAnimateIn?: Set<string>;
   classNames?: DataTableClassNames;
   enableRowSelection?: boolean;
   headerSelectionState?: boolean | "indeterminate";

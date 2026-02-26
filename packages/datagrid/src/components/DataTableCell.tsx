@@ -1,6 +1,15 @@
+"use client";
+
 import type React from "react";
+import { motion } from "framer-motion";
 import { cn } from "../lib/cn";
 import type { DataTableCellProps } from "../types/table";
+
+const cellTransition = {
+  type: "spring" as const,
+  stiffness: 400,
+  damping: 30,
+};
 
 export function DataTableCell({
   minWidth,
@@ -8,13 +17,37 @@ export function DataTableCell({
   className,
   style,
   children,
+  animateOut,
+  animateIn,
   ...props
-}: DataTableCellProps) {
+}: DataTableCellProps & { animateOut?: boolean; animateIn?: boolean }) {
   const mergedStyle: React.CSSProperties = {
     minWidth: typeof minWidth === "number" ? `${minWidth}px` : undefined,
     maxWidth: typeof maxWidth === "number" ? `${maxWidth}px` : undefined,
+    overflow: "hidden",
     ...style,
   };
+
+  const content =
+    animateOut || animateIn ? (
+      <motion.div
+        style={{ transformOrigin: "left center" }}
+        initial={animateIn ? { opacity: 0, scaleX: 0 } : undefined}
+        animate={
+          animateOut
+            ? { opacity: 0, scaleX: 0 }
+            : animateIn
+              ? { opacity: 1, scaleX: 1 }
+              : undefined
+        }
+        transition={cellTransition}
+        className="h-full w-full"
+      >
+        {children}
+      </motion.div>
+    ) : (
+      children
+    );
 
   return (
     <td
@@ -25,7 +58,7 @@ export function DataTableCell({
       style={mergedStyle}
       {...props}
     >
-      {children}
+      {content}
     </td>
   );
 }

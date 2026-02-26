@@ -41,7 +41,9 @@ export function ColumnActionsMenu<T extends object>({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {actions.map((action) => (
+        {actions
+          .filter((action) => !action.visibleWhen || action.visibleWhen(column))
+          .map((action) => (
           <DropdownMenuItem
             key={`${column.id}-${action.value}`}
             onSelect={() => action.action(column, { column })}

@@ -12,6 +12,8 @@ import {
 
 export function DataTableHeader<T extends object>({
   columns,
+  columnsToAnimateOut = new Set(),
+  columnsToAnimateIn = new Set(),
   classNames,
   enableRowSelection = false,
   headerSelectionState = false,
@@ -67,6 +69,8 @@ export function DataTableHeader<T extends object>({
             <DraggableHeaderColumn
               key={column.id}
               column={column}
+              animateOut={columnsToAnimateOut.has(column.id)}
+              animateIn={columnsToAnimateIn.has(column.id)}
               className={cn(classNames?.headerCell)}
               columnActions={columnActions}
               width={columnWidths[column.id]}

@@ -3,6 +3,12 @@
 import * as React from "react";
 import {
   DataTable,
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
   type DataTableColumnAction,
   type DataTableColumnConfig,
   type DataTableRowAction,
@@ -22,11 +28,13 @@ import {
   Check,
   Circle,
   Code2,
+  Columns3,
   Film,
   Flag,
   Gauge,
   Hash,
   Layout,
+  LayoutGrid,
   Minus,
   Monitor,
   Server,
@@ -268,12 +276,12 @@ export default function Home() {
   const [sortState, setSortState] = React.useState<DataTableSortState | null>(
     null
   );
-  const [groupByColumnId] = React.useState<string | null>(
+  const [groupByColumnId, setGroupByColumnId] = React.useState<string | null>(
     null
   );
-  const [subgroupByColumnId] = React.useState<string | null>(
-    null
-  );
+  const [subgroupByColumnId, setSubgroupByColumnId] = React.useState<
+    string | null
+  >(null);
 
   const handleCellChange = React.useCallback(
     (rowId: string | number, columnId: string, newValue: unknown) => {
@@ -327,6 +335,17 @@ export default function Home() {
     []
   );
 
+  const setColumnVisibility = React.useCallback(
+    (columnId: string, visible: boolean) => {
+      setColumns((currentColumns) =>
+        currentColumns.map((column) =>
+          column.id === columnId ? { ...column, isHidden: !visible } : column
+        )
+      );
+    },
+    []
+  );
+
   const columnActions = React.useMemo<DataTableColumnAction<DemoTableRow>[]>(
     () => [
       {
@@ -339,6 +358,7 @@ export default function Home() {
       {
         label: "Pin left",
         value: "pin_left",
+        visibleWhen: (col) => col.pin !== "left" && col.pin !== "right",
         action: (column) => {
           setColumnPin(column.id, "left");
           setLastAction(`column:${column.id}:pin_left`);
@@ -347,6 +367,7 @@ export default function Home() {
       {
         label: "Pin right",
         value: "pin_right",
+        visibleWhen: (col) => col.pin !== "left" && col.pin !== "right",
         action: (column) => {
           setColumnPin(column.id, "right");
           setLastAction(`column:${column.id}:pin_right`);
@@ -355,13 +376,22 @@ export default function Home() {
       {
         label: "Remove pin",
         value: "remove_pin",
+        visibleWhen: (col) => col.pin === "left" || col.pin === "right",
         action: (column) => {
           setColumnPin(column.id, null);
           setLastAction(`column:${column.id}:remove_pin`);
         },
       },
+      {
+        label: "Hide column",
+        value: "hide_column",
+        action: (column) => {
+          setColumnVisibility(column.id, false);
+          setLastAction(`column:${column.id}:hide`);
+        },
+      },
     ],
-    [setColumnPin]
+    [setColumnPin, setColumnVisibility]
   );
 
   return (
@@ -374,6 +404,116 @@ export default function Home() {
           Manage your video assets, metadata, and status.
         </p>
       </header>
+
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        {(() => {
+          const hiddenColumns = columns.filter((col) => col.isHidden === true);
+          return (
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex h-8 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-slate-400"
+                  >
+                    <Columns3 className="h-4 w-4" />
+                    Columns
+                    {hiddenColumns.length > 0 && (
+                      <span className="text-slate-500">
+                        ({hiddenColumns.length} hidden)
+                      </span>
+                    )}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="min-w-48">
+                  <DropdownMenuLabel>Show or hide columns</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {columns.map((col) => (
+                    <DropdownMenuCheckboxItem
+                      key={col.id}
+                      checked={col.isHidden !== true}
+                      onCheckedChange={(checked) =>
+                        setColumnVisibility(col.id, checked === true)
+                      }
+                    >
+                      {col.label}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex h-8 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-slate-400"
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                    Group by: {groupByColumnId ? columns.find((c) => c.id === groupByColumnId)?.label ?? "None" : "None"}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="min-w-48">
+                  <DropdownMenuLabel>Group by column</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuCheckboxItem
+                    checked={!groupByColumnId}
+                    onCheckedChange={() => setGroupByColumnId(null)}
+                  >
+                    None
+                  </DropdownMenuCheckboxItem>
+                  {columns
+                    .filter((c) => c.id !== subgroupByColumnId)
+                    .map((col) => (
+                      <DropdownMenuCheckboxItem
+                        key={col.id}
+                        checked={groupByColumnId === col.id}
+                        onCheckedChange={(checked) =>
+                          setGroupByColumnId(checked ? col.id : null)
+                        }
+                      >
+                        {col.label}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex h-8 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!groupByColumnId}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                    Subgroup by: {subgroupByColumnId ? columns.find((c) => c.id === subgroupByColumnId)?.label ?? "None" : "None"}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="min-w-48">
+                  <DropdownMenuLabel>Subgroup by column</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuCheckboxItem
+                    checked={!subgroupByColumnId}
+                    onCheckedChange={() => setSubgroupByColumnId(null)}
+                  >
+                    None
+                  </DropdownMenuCheckboxItem>
+                  {columns
+                    .filter((c) => c.id !== groupByColumnId)
+                    .map((col) => (
+                      <DropdownMenuCheckboxItem
+                        key={col.id}
+                        checked={subgroupByColumnId === col.id}
+                        onCheckedChange={(checked) =>
+                          setSubgroupByColumnId(checked ? col.id : null)
+                        }
+                      >
+                        {col.label}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          );
+        })()}
+      </div>
 
       <DataTable
         rows={rows}

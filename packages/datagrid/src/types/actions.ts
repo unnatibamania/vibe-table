@@ -18,6 +18,8 @@ export interface DataTableColumnAction<T> {
   label: string;
   value: string;
   icon?: React.ReactNode;
+  /** When provided, the action is only shown when this returns true */
+  visibleWhen?: (column: DataTableColumn<T>) => boolean;
   action: (
     column: DataTableColumn<T>,
     context: DataTableActionContext<T>
