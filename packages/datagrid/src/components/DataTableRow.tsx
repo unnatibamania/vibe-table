@@ -5,7 +5,7 @@ export function DataTableRow({ className, children, ...props }: DataTableRowProp
   return (
     <tr
       className={cn(
-        "border-b border-zinc-200 transition-colors hover:bg-zinc-50/70",
+        "transition-colors hover:bg-zinc-50/70",
         className
       )}
       {...props}

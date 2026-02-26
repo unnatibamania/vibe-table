@@ -43,7 +43,6 @@ const initialColumns: DataTableColumnConfig<DemoRow>[] = [
     Icon: Activity,
     header: (
       <div className="flex items-center gap-2">
-        <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-700" />
         <span>Status</span>
       </div>
     ),

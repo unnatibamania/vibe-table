@@ -31,7 +31,7 @@ export function DataTableHeader<T extends object>({
   onColumnContextMenu,
 }: DataTableHeaderProps<T>) {
   return (
-    <thead className={cn("bg-zinc-50", classNames?.thead)}>
+    <thead className={cn("", classNames?.thead)}>
       <SortableContext
         items={columns.map((column) => column.id)}
         strategy={horizontalListSortingStrategy}

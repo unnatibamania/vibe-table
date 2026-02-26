@@ -17,7 +17,7 @@ export const DataTableColumn = React.forwardRef<
       ref={ref}
       scope="col"
       className={cn(
-        "border-b border-zinc-200 px-3 py-2 text-left align-middle font-medium text-zinc-900 whitespace-nowrap",
+        " px-3 py-2 text-left align-middle font-medium text-zinc-900 whitespace-nowrap",
         className
       )}
       style={mergedStyle}
