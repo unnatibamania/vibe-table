@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ArrowDown, ArrowUp, ArrowUpDown, GripVertical } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "../lib/cn";
 import type { DataTableColumnAction } from "../types/actions";
 import type { NormalizedDataTableColumn } from "../types/column";
@@ -54,11 +54,18 @@ export function DraggableHeaderColumn<T extends object>({
   const isPinned = pinSide === "left" || pinSide === "right";
   const isDraggable = !isPinned && column.isDraggable !== false;
 
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({
-      id: column.id,
-      disabled: !isDraggable,
-    });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: column.id,
+    disabled: !isDraggable,
+  });
 
   const setRefs = React.useCallback(
     (node: HTMLTableCellElement | null) => {
@@ -116,15 +123,31 @@ export function DraggableHeaderColumn<T extends object>({
         : "none"
     : undefined;
 
-  const sortIcon = !isSortable ? null : sortDirection === "asc" ? (
-    <ArrowUp className="h-3.5 w-3.5 text-slate-600" />
-  ) : sortDirection === "desc" ? (
-    <ArrowDown className="h-3.5 w-3.5 text-slate-600" />
-  ) : (
-    <ArrowUpDown className="h-3.5 w-3.5 text-slate-400" />
+  const sortIcon = !isSortable ? null : (
+    <span className="inline-flex flex-col items-center leading-none">
+      <ChevronUp
+        className={cn(
+          "h-3 w-3 transition-colors",
+          sortDirection === "asc" ? "text-slate-700" : "text-slate-400"
+        )}
+      />
+      <ChevronDown
+        className={cn(
+          "-mt-0.5 h-3 w-3 transition-colors",
+          sortDirection === "desc" ? "text-slate-700" : "text-slate-400"
+        )}
+      />
+    </span>
   );
 
   const HeaderIcon = column.Icon;
+  const activatorProps = isDraggable
+    ? {
+        ...attributes,
+        ...listeners,
+        "data-testid": `drag-handle-${column.id}`,
+      }
+    : {};
 
   return (
     <DataTableColumn
@@ -142,41 +165,40 @@ export function DraggableHeaderColumn<T extends object>({
       aria-sort={ariaSortValue as React.AriaAttributes["aria-sort"]}
       onContextMenu={(event) => onColumnContextMenu?.(event, column)}
     >
-      <div className="flex items-center justify-between gap-2">
+      <div
+        ref={isDraggable ? setActivatorNodeRef : undefined}
+        className={cn(
+          "flex items-center justify-between gap-2",
+          isDraggable
+            ? "cursor-grab touch-none active:cursor-grabbing"
+            : undefined,
+          isDraggable ? classNames?.dragHandle : undefined
+        )}
+        {...activatorProps}
+      >
         <div className="flex min-w-0 items-center gap-1">
-          {isDraggable ? (
-            <button
-              type="button"
-              className={cn(
-                "inline-flex h-5 w-5 cursor-grab touch-none items-center justify-center rounded text-slate-500 hover:bg-slate-200/80 active:cursor-grabbing active:scale-[0.98] transition-transform duration-150",
-                classNames?.dragHandle
-              )}
-              aria-label={`Drag column ${column.label}`}
-              data-testid={`drag-handle-${column.id}`}
-              {...attributes}
-              {...listeners}
-            >
-              <GripVertical className="h-3.5 w-3.5" />
-            </button>
-          ) : null}
           {isSortable ? (
-            <button
-              type="button"
-              className={cn(
-                "inline-flex min-w-0 items-center gap-2 rounded px-1 py-0.5 text-left hover:bg-slate-100/80 active:scale-[0.98] transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                classNames?.sortTrigger
-              )}
-              onClick={() => onSortToggle?.(column.id)}
-              data-testid={`sort-trigger-${column.id}`}
-            >
+            <div className="inline-flex min-w-0 items-center gap-2 pl-3 pr-1 py-0.5 text-left">
               {HeaderIcon ? (
                 <HeaderIcon className="h-3.5 w-3.5 shrink-0 text-slate-500" />
               ) : null}
               <span className="truncate">{column.header ?? column.label}</span>
-              {sortIcon}
-            </button>
+              <button
+                type="button"
+                className={cn(
+                  "inline-flex items-center justify-center rounded-sm p-0.5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-400",
+                  classNames?.sortTrigger
+                )}
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={() => onSortToggle?.(column.id)}
+                data-testid={`sort-trigger-${column.id}`}
+                aria-label={`Sort by ${column.label}`}
+              >
+                {sortIcon}
+              </button>
+            </div>
           ) : (
-            <span className="inline-flex min-w-0 items-center gap-1 truncate font-medium text-slate-700">
+            <span className="inline-flex min-w-0 items-center gap-1 truncate pl-3 font-medium text-slate-700">
               {HeaderIcon ? (
                 <HeaderIcon className="h-3.5 w-3.5 shrink-0 text-slate-500" />
               ) : null}

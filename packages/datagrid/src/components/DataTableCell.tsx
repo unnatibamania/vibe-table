@@ -19,7 +19,7 @@ export function DataTableCell({
   return (
     <td
       className={cn(
-        "px-3 py-2.5 align-middle text-slate-800 whitespace-nowrap text-[0.9375rem] leading-relaxed",
+        "px-10 py-1 align-middle text-slate-800 whitespace-nowrap text-[0.9375rem] leading-relaxed",
         className
       )}
       style={mergedStyle}

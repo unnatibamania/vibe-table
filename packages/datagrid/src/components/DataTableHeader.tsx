@@ -31,12 +31,12 @@ export function DataTableHeader<T extends object>({
   onColumnContextMenu,
 }: DataTableHeaderProps<T>) {
   return (
-    <thead className={cn("bg-slate-50/80", classNames?.thead)}>
+    <thead className={cn("", classNames?.thead)}>
       <SortableContext
         items={columns.map((column) => column.id)}
         strategy={horizontalListSortingStrategy}
       >
-        <DataTableRow className={cn("h-12 border-b border-slate-200/50", classNames?.headerRow)}>
+        <DataTableRow className={cn("h-12 ", classNames?.headerRow)}>
           {enableRowSelection ? (
             <DataTableColumn
               className={cn(
