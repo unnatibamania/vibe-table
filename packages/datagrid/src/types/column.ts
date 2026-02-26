@@ -11,7 +11,39 @@ export type ColumnType =
   | "rating"
   | "checkbox"
   | "user"
+  | "progress"
+  | "video"
+  | "resolution"
   | "custom";
+
+export interface UserCellValue {
+  image?: string | null;
+  name: string;
+  description?: string | null;
+  desction?: string | null;
+}
+
+export type ProgressCellValue =
+  | {
+      completed: number;
+      total: number;
+      fullValue?: number;
+    }
+  | {
+      completed: number;
+      total?: number;
+      fullValue: number;
+    };
+
+export interface VideoCellValue {
+  thumbnail?: string | null;
+  fileName: string;
+}
+
+export interface ResolutionCellValue {
+  width: number;
+  height: number;
+}
 
 export type CellValue =
   | string
@@ -19,6 +51,10 @@ export type CellValue =
   | boolean
   | Date
   | string[]
+  | UserCellValue
+  | ProgressCellValue
+  | VideoCellValue
+  | ResolutionCellValue
   | null
   | undefined;
 

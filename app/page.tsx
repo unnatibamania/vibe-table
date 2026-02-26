@@ -6,22 +6,55 @@ import {
   type DataTableColumnAction,
   type DataTableColumnConfig,
   type DataTableRowAction,
+  type ProgressCellValue,
+  type ResolutionCellValue,
   type DataTableSortState,
   type RowId,
+  type UserCellValue,
+  type VideoCellValue,
 } from "@/packages/datagrid/src";
 import { initialRows, type DemoRow } from "./demo-rows";
 import {
   Activity,
   Calendar,
   Check,
+  Film,
   Flag,
+  Gauge,
   Hash,
+  Monitor,
   Star,
   Tag,
   User,
   Users,
 } from "lucide-react";
 
+type DemoTableRow = DemoRow & {
+  owner: UserCellValue;
+  progress: ProgressCellValue;
+  video: VideoCellValue;
+  resolution: ResolutionCellValue;
+};
+
+const initialTableRows: DemoTableRow[] = initialRows.map((row) => ({
+  ...row,
+  owner: {
+    name: row.uploadedBy,
+    description: `${row.status} uploader`,
+    image: `https://i.pravatar.cc/80?img=${(row.id % 70) + 1}`,
+  },
+  progress: {
+    completed: row.rating,
+    fullValue: 5,
+  },
+  video: {
+    fileName: `${row.name.toLowerCase()}.mp4`,
+    thumbnail: `https://picsum.photos/seed/video-${row.id}/160/90`,
+  },
+  resolution: row.featured
+    ? { width: 3840, height: 2160 }
+    : { width: 1920, height: 1080 },
+}));
 
 const LIBRARY_TABLE_COLUMNS_IDS = {
   STATUS: "status",
@@ -31,12 +64,16 @@ const LIBRARY_TABLE_COLUMNS_IDS = {
   FEATURED: "featured",
   UPDATED_AT: "updatedAt",
   UPLOADED_BY: "uploadedBy",
+  OWNER: "owner",
+  PROGRESS: "progress",
+  VIDEO: "video",
+  RESOLUTION: "resolution",
   PRIORITY: "priority",
   TAGS: "tags",
   RATING: "rating",
 } as const;
 
-const initialColumns: DataTableColumnConfig<DemoRow>[] = [
+const initialColumns: DataTableColumnConfig<DemoTableRow>[] = [
   {
     id: LIBRARY_TABLE_COLUMNS_IDS.STATUS,
     label: "Status",
@@ -124,6 +161,38 @@ const initialColumns: DataTableColumnConfig<DemoRow>[] = [
     type: "text",
   },
   {
+    id: LIBRARY_TABLE_COLUMNS_IDS.OWNER,
+    label: "Owner",
+    Icon: User,
+    header: "Owner",
+    minWidth: 220,
+    type: "user",
+  },
+  {
+    id: LIBRARY_TABLE_COLUMNS_IDS.PROGRESS,
+    label: "Progress",
+    Icon: Gauge,
+    header: "Progress",
+    minWidth: 170,
+    type: "progress",
+  },
+  {
+    id: LIBRARY_TABLE_COLUMNS_IDS.VIDEO,
+    label: "Video",
+    Icon: Film,
+    header: "Video",
+    minWidth: 220,
+    type: "video",
+  },
+  {
+    id: LIBRARY_TABLE_COLUMNS_IDS.RESOLUTION,
+    label: "Resolution",
+    Icon: Monitor,
+    header: "Resolution",
+    minWidth: 150,
+    type: "resolution",
+  },
+  {
     id: LIBRARY_TABLE_COLUMNS_IDS.PRIORITY,
     label: "Priority",
     Icon: Flag,
@@ -167,9 +236,9 @@ const initialColumns: DataTableColumnConfig<DemoRow>[] = [
 ];
 
 export default function Home() {
-  const [rows, setRows] = React.useState(initialRows);
+  const [rows, setRows] = React.useState<DemoTableRow[]>(initialTableRows);
   const [columns, setColumns] =
-    React.useState<DataTableColumnConfig<DemoRow>[]>(initialColumns);
+    React.useState<DataTableColumnConfig<DemoTableRow>[]>(initialColumns);
   const [selectedRowIds, setSelectedRowIds] = React.useState<Set<RowId>>(
     new Set()
   );
@@ -192,14 +261,14 @@ export default function Home() {
     (rowId: string | number, columnId: string, newValue: unknown) => {
       setRows((currentRows) =>
         currentRows.map((row) =>
-          row.id === rowId ? ({ ...row, [columnId]: newValue } as DemoRow) : row
+          row.id === rowId ? ({ ...row, [columnId]: newValue } as DemoTableRow) : row
         )
       );
     },
     []
   );
 
-  const rowActions = React.useMemo<DataTableRowAction<DemoRow>[]>(
+  const rowActions = React.useMemo<DataTableRowAction<DemoTableRow>[]>(
     () => [
       {
         label: "Mark as ready",
@@ -240,7 +309,7 @@ export default function Home() {
     []
   );
 
-  const columnActions = React.useMemo<DataTableColumnAction<DemoRow>[]>(
+  const columnActions = React.useMemo<DataTableColumnAction<DemoTableRow>[]>(
     () => [
       {
         label: "Log column id",

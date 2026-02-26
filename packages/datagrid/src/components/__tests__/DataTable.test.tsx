@@ -3,7 +3,13 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { DataTable } from "../DataTable";
-import type { DataTableColumn } from "../../types/column";
+import type {
+  DataTableColumn,
+  ProgressCellValue,
+  ResolutionCellValue,
+  UserCellValue,
+  VideoCellValue,
+} from "../../types/column";
 
 interface Row {
   id?: number;
@@ -161,6 +167,72 @@ describe("DataTable", () => {
 
     expect(screen.getByText("Alice")).toBeInTheDocument();
     expect(screen.getByText("Bob")).toBeInTheDocument();
+  });
+
+  it("renders user, progress, video and resolution column types", () => {
+    interface RichRow {
+      id: number;
+      owner: UserCellValue;
+      buildProgress: ProgressCellValue;
+      previewVideo: VideoCellValue;
+      outputResolution: ResolutionCellValue;
+    }
+
+    const richRows: RichRow[] = [
+      {
+        id: 1,
+        owner: {
+          name: "Jane Doe",
+          description: "Design lead",
+        },
+        buildProgress: {
+          completed: 3,
+          fullValue: 10,
+        },
+        previewVideo: {
+          fileName: "intro.mp4",
+        },
+        outputResolution: {
+          width: 1920,
+          height: 1080,
+        },
+      },
+    ];
+
+    const richColumns: DataTableColumn<RichRow>[] = [
+      {
+        id: "owner",
+        label: "Owner",
+        header: "Owner",
+        type: "user",
+      },
+      {
+        id: "buildProgress",
+        label: "Progress",
+        header: "Progress",
+        type: "progress",
+      },
+      {
+        id: "previewVideo",
+        label: "Video",
+        header: "Video",
+        type: "video",
+      },
+      {
+        id: "outputResolution",
+        label: "Resolution",
+        header: "Resolution",
+        type: "resolution",
+      },
+    ];
+
+    render(<DataTable rows={richRows} columns={richColumns} />);
+
+    expect(screen.getByText("Jane Doe")).toBeInTheDocument();
+    expect(screen.getByText("Design lead")).toBeInTheDocument();
+    expect(screen.getByText("3/10")).toBeInTheDocument();
+    expect(screen.getByText("intro.mp4")).toBeInTheDocument();
+    expect(screen.getByText("1920 x 1080")).toBeInTheDocument();
   });
 
   it("uses getRowId when provided", () => {

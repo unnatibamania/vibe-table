@@ -15,6 +15,10 @@ export { SelectCellEditor } from "./components/cells/select-cell-editor";
 export { MultiSelectCellEditor } from "./components/cells/multi-select-cell-editor";
 export { ToggleCellEditor } from "./components/cells/toggle-cell-editor";
 export { RatingCellEditor } from "./components/cells/rating-cell-editor";
+export { UserCell } from "./components/cells/user-cell";
+export { ProgressCell } from "./components/cells/progress-cell";
+export { VideoCell } from "./components/cells/video-cell";
+export { ResolutionCell } from "./components/cells/resolution-cell";
 export {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -43,6 +47,10 @@ export type {
   SelectOption,
   CellValue,
   ColumnType,
+  UserCellValue,
+  ProgressCellValue,
+  VideoCellValue,
+  ResolutionCellValue,
 } from "./types/column";
 export type {
   DataTableActionContext,
