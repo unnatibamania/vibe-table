@@ -491,6 +491,39 @@ describe("DataTable", () => {
     expect(rowActionCell).toHaveClass("slot-row-actions-cell");
   });
 
+  it("keeps selection and row actions utility columns sticky without pinned data columns", () => {
+    render(
+      <DataTable
+        rows={rows}
+        columns={baseColumns}
+        rowActions={[
+          {
+            label: "Edit row",
+            value: "edit",
+            action: () => undefined,
+          },
+        ]}
+        enableRowSelection
+      />
+    );
+
+    const selectionHeaderCell = screen
+      .getByLabelText("Select all rows")
+      .closest("th") as HTMLTableCellElement;
+    expect(selectionHeaderCell).toHaveStyle({
+      position: "sticky",
+      left: "0px",
+    });
+
+    const rowActionCell = screen
+      .getByTestId("row-actions-trigger-1")
+      .closest("td") as HTMLTableCellElement;
+    expect(rowActionCell).toHaveStyle({
+      position: "sticky",
+      right: "0px",
+    });
+  });
+
   it("renders group headers as full rows when grouped by a column", () => {
     const columns: DataTableColumn<Row>[] = [
       {

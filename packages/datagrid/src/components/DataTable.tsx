@@ -792,11 +792,8 @@ export function DataTable<T extends object>({
     []
   );
 
-  const hasLeftPinnedColumns = leftPinnedColumns.length > 0;
-  const hasRightPinnedColumns = rightPinnedColumns.length > 0;
-
-  const stickySelectionColumn = enableRowSelection && hasLeftPinnedColumns;
-  const stickyRowActionsColumn = rowActions.length > 0 && hasRightPinnedColumns;
+  const stickySelectionColumn = enableRowSelection;
+  const stickyRowActionsColumn = rowActions.length > 0;
 
   const getEffectiveColumnWidth = React.useCallback(
     (columnId: string) => {
