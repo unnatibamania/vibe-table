@@ -35,7 +35,14 @@ export function SelectCellEditor({
 
   if (!isEditable) {
     return (
-      <div className={cn("truncate", className)}>{selectedOption?.label ?? "-"}</div>
+      <div className={cn("flex items-center gap-2 truncate", className)}>
+        {selectedOption?.icon ? (
+          <span className="shrink-0 [&>svg]:h-4 [&>svg]:w-4 [&>svg]:text-current">
+            {selectedOption.icon}
+          </span>
+        ) : null}
+        <span className="truncate">{selectedOption?.label ?? "-"}</span>
+      </div>
     );
   }
 
@@ -53,7 +60,14 @@ export function SelectCellEditor({
         <SelectItem value={EMPTY_VALUE}>(empty)</SelectItem>
         {options.map((option) => (
           <SelectItem key={option.value} value={option.value}>
-            {option.label}
+            <span className="flex items-center gap-2">
+              {option.icon ? (
+                <span className="shrink-0 [&>svg]:h-4 [&>svg]:w-4 [&>svg]:text-current">
+                  {option.icon}
+                </span>
+              ) : null}
+              {option.label}
+            </span>
           </SelectItem>
         ))}
       </SelectContent>

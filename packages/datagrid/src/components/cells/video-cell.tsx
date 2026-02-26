@@ -36,7 +36,7 @@ export function VideoCell({ value, className }: VideoCellProps) {
         <img
           src={thumbnail}
           alt={`${fileName} thumbnail`}
-          className="h-8 w-12 shrink-0 rounded object-cover"
+          className="h-5 w-9 shrink-0 rounded-lg object-cover"
         />
       ) : (
         <div

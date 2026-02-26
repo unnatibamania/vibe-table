@@ -59,7 +59,14 @@ export function MultiSelectCellEditor({
     return (
       <div className={cn("flex flex-wrap gap-1", className)}>
         {selectedOptions.map((option) => (
-          <Badge key={option.value}>{option.label}</Badge>
+          <Badge key={option.value} className="gap-1">
+            {option.icon ? (
+              <span className="shrink-0 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-current">
+                {option.icon}
+              </span>
+            ) : null}
+            {option.label}
+          </Badge>
         ))}
       </div>
     );
@@ -80,7 +87,12 @@ export function MultiSelectCellEditor({
           <span className="mr-2 flex flex-1 items-center gap-1 overflow-hidden">
             {selectedOptions.length > 0 ? (
               selectedOptions.slice(0, 2).map((option) => (
-                <Badge key={option.value} className="truncate">
+                <Badge key={option.value} className="truncate gap-1">
+                  {option.icon ? (
+                    <span className="shrink-0 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-current">
+                      {option.icon}
+                    </span>
+                  ) : null}
                   {option.label}
                 </Badge>
               ))
@@ -110,10 +122,15 @@ export function MultiSelectCellEditor({
                   >
                     <Check
                       className={cn(
-                        "h-4 w-4",
+                        "h-4 w-4 shrink-0",
                         isSelected ? "opacity-100" : "opacity-0"
                       )}
                     />
+                    {option.icon ? (
+                      <span className="shrink-0 [&>svg]:h-4 [&>svg]:w-4 [&>svg]:text-current">
+                        {option.icon}
+                      </span>
+                    ) : null}
                     <span>{option.label}</span>
                   </CommandItem>
                 );

@@ -30,7 +30,7 @@ export function ResolutionCell({ value, className }: ResolutionCellProps) {
 
   return (
     <div className={cn("truncate text-sm text-zinc-700", className)}>
-      {width} x {height}
+      {width} <span className="text-zinc-400">x</span> {height}
     </div>
   );
 }
